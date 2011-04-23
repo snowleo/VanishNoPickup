@@ -188,14 +188,14 @@ public class Vanish extends JavaPlugin
 		if ((!force) && (check(p2, "vanish.dont.hide"))) { return; }
 		CraftPlayer hide = (CraftPlayer) p1;
 		CraftPlayer hideFrom = (CraftPlayer) p2;
-		hideFrom.getHandle().netServerHandler.a(new Packet29DestroyEntity(hide.getEntityId()));
+		hideFrom.getHandle().netServerHandler.sendPacket(new Packet29DestroyEntity(hide.getEntityId()));
 	}
 
 	private void uninvisible(Player p1, Player p2)
 	{
 		CraftPlayer unHide = (CraftPlayer) p1;
 		CraftPlayer unHideFrom = (CraftPlayer) p2;
-		unHideFrom.getHandle().netServerHandler.a(new Packet20NamedEntitySpawn(unHide.getHandle()));
+		unHideFrom.getHandle().netServerHandler.sendPacket(new Packet20NamedEntitySpawn(unHide.getHandle()));
 	}
 
 	public void vanish(Player player)
