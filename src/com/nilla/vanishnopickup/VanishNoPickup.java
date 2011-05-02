@@ -53,7 +53,7 @@ public class VanishNoPickup extends JavaPlugin
 	public void onDisable()
 	{
 		timer.cancel();
-		log.info(getDescription().getName() + " " + getDescription().getVersion() + " unloaded.");
+		log.info("[" + getDescription().getName() + "] " + getDescription().getVersion() + " disabled.");
 	}
 
 	public void onEnable()
@@ -80,7 +80,8 @@ public class VanishNoPickup extends JavaPlugin
 		pm.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Priority.Normal, this);
 		pm.registerEvent(Event.Type.PLAYER_TELEPORT, playerListener, Priority.Monitor, this);
 
-		log.info(getDescription().getName() + " " + getDescription().getVersion() + " loaded.");
+		log.info("[" + getDescription().getName() + "] " + getDescription().getVersion() + " enabled.");
+		 
 
 		timer.schedule(new UpdateInvisibleTimerTask(true), (1000 * 60) * REFRESH_TIMER);
 	}
