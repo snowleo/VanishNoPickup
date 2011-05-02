@@ -1,4 +1,4 @@
-package com.echo28.bukkit.vanish;
+package com.nilla.vanishnopickup;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,7 +24,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.echo28.bukkit.findme.FindMe;
+//import com.echo28.bukkit.findme.FindMe;
 import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
 
@@ -33,8 +33,9 @@ import com.nijikokun.bukkit.Permissions.Permissions;
  * Vanish for Bukkit
  * 
  * @author Nodren
+ * @updated by EvilNilla 
  */
-public class Vanish extends JavaPlugin
+public class VanishNoPickup extends JavaPlugin
 {
 	public static PermissionHandler Permissions = null;
 	public int RANGE;
@@ -44,8 +45,9 @@ public class Vanish extends JavaPlugin
 	private Timer timer = new Timer();
 
 	public List<Player> invisible = new ArrayList<Player>();
+	public List<Player> nopickups = new ArrayList<Player>();
 
-	private final VanishPlayerListener playerListener = new VanishPlayerListener(this);
+	private final VanishNoPickupPlayerListener playerListener = new VanishNoPickupPlayerListener(this);
 	private final Logger log = Logger.getLogger("Minecraft");
 
 	public void onDisable()
@@ -75,8 +77,7 @@ public class Vanish extends JavaPlugin
 		REFRESH_TIMER = getConfiguration().getInt("refresh_timer", 2);
 
 		PluginManager pm = getServer().getPluginManager();
-		pm.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Priority.Monitor, this);
-		pm.registerEvent(Event.Type.PLAYER_QUIT, playerListener, Priority.Monitor, this);
+		pm.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Priority.Normal, this);
 		pm.registerEvent(Event.Type.PLAYER_TELEPORT, playerListener, Priority.Monitor, this);
 
 		log.info(getDescription().getName() + " " + getDescription().getVersion() + " loaded.");
@@ -141,6 +142,19 @@ public class Vanish extends JavaPlugin
 			vanishCommand(sender);
 			return true;
 		}
+		else if (command.getName().equalsIgnoreCase("np"))
+		{
+			if (check(sender, "vanishnopickup.nopickup")){
+				if ((args.length == 1) && (args[0].equalsIgnoreCase("list")))
+				{
+					nopickup_list(sender);
+					return true;
+				}
+				toggleNoPickup((Player)sender);
+				return true;
+				
+			}
+		}
 		return false;
 	}
 
@@ -203,8 +217,10 @@ public class Vanish extends JavaPlugin
 		if (invisible.contains(player))
 		{
 			reappear(player);
+			EnablePickups(player);
 			return;
 		}
+		DisablePickups(player);
 		invisible.add(player);
 		Player[] playerList = getServer().getOnlinePlayers();
 		for (Player p : playerList)
@@ -216,13 +232,14 @@ public class Vanish extends JavaPlugin
 		}
 		log.info(player.getName() + " disappeared.");
 		player.sendMessage(ChatColor.RED + "Poof!");
-
+/*
 		Plugin plugin = getServer().getPluginManager().getPlugin("FindMe");
 		if (plugin != null)
 		{
 			FindMe findMe = (FindMe) plugin;
 			findMe.hidePlayer(player);
 		}
+		*/
 	}
 
 	public void reappear(Player player)
@@ -243,13 +260,14 @@ public class Vanish extends JavaPlugin
 			}
 			log.info(player.getName() + " reappeared.");
 			player.sendMessage(ChatColor.RED + "You have reappeared!");
-
+/*
 			Plugin plugin = getServer().getPluginManager().getPlugin("FindMe");
 			if (plugin != null)
 			{
 				FindMe findMe = (FindMe) plugin;
 				findMe.unHidePlayer(player);
 			}
+			*/
 		}
 	}
 
@@ -353,5 +371,52 @@ public class Vanish extends JavaPlugin
 			updateInvisibleForAll(startTimer);
 		}
 	}
+	
+	
+	public void toggleNoPickup(Player player){
+		
+		if (nopickups.contains(player)){
+			EnablePickups(player);
+		}
+		else{
+			DisablePickups(player);			
+		}
+	}
+	private void DisablePickups(Player player){
+		player.sendMessage(ChatColor.RED + "Disabling Picking Up of Items");
+		if (!nopickups.contains(player)){
+			nopickups.add(player);
+		}
+	}
+	private void EnablePickups(Player player){
+		player.sendMessage(ChatColor.RED + "Enabling Picking Up of Items");
+		if (nopickups.contains(player)){
+			nopickups.remove(player);
+		}
+	}
+
+	private void nopickup_list(CommandSender sender)
+	{
+		if (!check(sender, "nopickups.list")) { return; }
+		if (nopickups.size() == 0)
+		{
+			sender.sendMessage(ChatColor.RED + "No players found");
+			return;
+		}
+		String message = "List of Players with Pickups Disabled: ";
+		int i = 0;
+		for (Player thisPlayer : nopickups)
+		{
+			message += thisPlayer.getDisplayName();
+			i++;
+			if (i != nopickups.size())
+			{
+				message += " ";
+			}
+		}
+		sender.sendMessage(ChatColor.RED + message + ChatColor.WHITE + " ");
+	}
+
+	
 
 }
