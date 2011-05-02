@@ -145,7 +145,7 @@ public class VanishNoPickup extends JavaPlugin
 		}
 		else if (command.getName().equalsIgnoreCase("np"))
 		{
-			if (check(sender, "vanishnopickup.nopickup")){
+			if (check(sender, "vanish.nopickup")){
 				if ((args.length == 1) && (args[0].equalsIgnoreCase("list")))
 				{
 					nopickup_list(sender);
