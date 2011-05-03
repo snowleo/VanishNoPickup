@@ -1,7 +1,6 @@
 package com.nilla.vanishnopickup;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -23,6 +22,7 @@ import org.bukkit.event.Event.Priority;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.config.Configuration;
 
 //import com.echo28.bukkit.findme.FindMe;
 import com.nijiko.permissions.PermissionHandler;
@@ -38,6 +38,8 @@ import com.nijikokun.bukkit.Permissions.Permissions;
 public class VanishNoPickup extends JavaPlugin
 {
 	public static PermissionHandler Permissions = null;
+	
+	public Configuration config;
 	public int RANGE;
 	public int TOTAL_REFRESHES;
 	public int REFRESH_TIMER;
@@ -58,27 +60,33 @@ public class VanishNoPickup extends JavaPlugin
 
 	public void onEnable()
 	{
-		getDataFolder().mkdirs();
-
-		File yml = new File(getDataFolder(), "config.yml");
-		if (!yml.exists())
-		{
-			try
-			{
-				yml.createNewFile();
-			}
-			catch (IOException ex)
-			{
-			}
-		}
+		//Setup Permissions 
 		setupPermissions();
-		RANGE = getConfiguration().getInt("range", 512);
-		TOTAL_REFRESHES = getConfiguration().getInt("total_refreshes", 10);
-		REFRESH_TIMER = getConfiguration().getInt("refresh_timer", 2);
+		
+		
+		//Create new configuration file
+		config = new Configuration(new File(getDataFolder() ,  "config.yml"));
+		
+		//Load the config if it's there
+		try{
+			config.load();	
+		}
+		catch(Exception ex){
+			//Ignore the errors
+		}
+		
+		//Load our variables from configuration
+		RANGE = config.getInt("range", 512);
+		TOTAL_REFRESHES = config.getInt("total_refreshes", 10);
+		REFRESH_TIMER = config.getInt("refresh_timer", 2);
+		
+		//Save the configuration(especially if it wasn't before)
+		config.save();
 
 		PluginManager pm = getServer().getPluginManager();
 		pm.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Priority.Normal, this);
-		pm.registerEvent(Event.Type.PLAYER_TELEPORT, playerListener, Priority.Monitor, this);
+		pm.registerEvent(Event.Type.PLAYER_TELEPORT, playerListener, Priority.High, this);
+		pm.registerEvent(Event.Type.PLAYER_PICKUP_ITEM, playerListener, Priority.Normal, this);
 
 		log.info("[" + getDescription().getName() + "] " + getDescription().getVersion() + " enabled.");
 		 
@@ -398,7 +406,7 @@ public class VanishNoPickup extends JavaPlugin
 
 	private void nopickup_list(CommandSender sender)
 	{
-		if (!check(sender, "nopickups.list")) { return; }
+		if (!check(sender, "vanish.nopickup.list")) { return; }
 		if (nopickups.size() == 0)
 		{
 			sender.sendMessage(ChatColor.RED + "No players found");
