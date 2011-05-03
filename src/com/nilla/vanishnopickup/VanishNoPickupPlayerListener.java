@@ -32,8 +32,11 @@ public class VanishNoPickupPlayerListener extends PlayerListener
 		if(plugin.invisible.contains(player)){
 			player.sendMessage(ChatColor.RED + "*Poof* You are currently invisible!" + ChatColor.WHITE);
 			
-			//Send the update
-			plugin.updateInvisibleOnTimer();
+			plugin.invisible.remove(player);
+			
+			//Try this instead of timer
+			plugin.vanish(player);
+			
 		}
 		
 		
