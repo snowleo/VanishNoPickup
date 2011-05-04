@@ -1,17 +1,18 @@
 name: VanishNoPickup
 main: com.nilla.vanishnopickup.VanishNoPickup
-version: 1.6.1
+version: 1.7
 author: EvilNilla
 commands:
   vanish:
     description: Toggles your visibility
-    alias: poof
+    aliases: poof
     usage: |
            Incorrect usage of /<command>. Examples:
            /<command> - Toggles your visibility
            /<command> list - List of invisible players
-  np:
+  nopickup:
     description: Toggles Picking Up Items
+    aliases: np
     usage: |
            Incorrect usage of /<command>. Examples:
            /<command> - Toggles Your Ability to Pickup Items

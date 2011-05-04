@@ -49,8 +49,9 @@ public class VanishNoPickup extends JavaPlugin
 	public List<Player> invisible = new ArrayList<Player>();
 	public List<Player> nopickups = new ArrayList<Player>();
 
+	private final VanishNoPickupEntityListener entityListener = new VanishNoPickupEntityListener(this);
 	private final VanishNoPickupPlayerListener playerListener = new VanishNoPickupPlayerListener(this);
-	private final Logger log = Logger.getLogger("Minecraft");
+	protected final Logger log = Logger.getLogger("Minecraft");
 
 	public void onDisable()
 	{
@@ -87,7 +88,8 @@ public class VanishNoPickup extends JavaPlugin
 		pm.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Priority.Normal, this);
 		pm.registerEvent(Event.Type.PLAYER_TELEPORT, playerListener, Priority.High, this);
 		pm.registerEvent(Event.Type.PLAYER_PICKUP_ITEM, playerListener, Priority.Normal, this);
-
+		pm.registerEvent(Event.Type.ENTITY_TARGET, entityListener, Priority.Normal, this);
+		
 		log.info("[" + getDescription().getName() + "] " + getDescription().getVersion() + " enabled.");
 		 
 
@@ -151,7 +153,7 @@ public class VanishNoPickup extends JavaPlugin
 			vanishCommand(sender);
 			return true;
 		}
-		else if (command.getName().equalsIgnoreCase("np"))
+		else if (command.getName().equalsIgnoreCase("np") || command.getName().equalsIgnoreCase("nopickup"))
 		{
 			if (check(sender, "vanish.nopickup")){
 				if ((args.length == 1) && (args[0].equalsIgnoreCase("list")))

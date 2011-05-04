@@ -12,6 +12,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
  * Handle events for all Player related events
  * 
  * @author Nodren
+ * @updated EvilNilla
  */
 public class VanishNoPickupPlayerListener extends PlayerListener
 {
