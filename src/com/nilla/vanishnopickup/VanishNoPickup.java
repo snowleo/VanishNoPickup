@@ -24,7 +24,6 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.config.Configuration;
 
-//import com.echo28.bukkit.findme.FindMe;
 import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
 
@@ -243,14 +242,6 @@ public class VanishNoPickup extends JavaPlugin
 		}
 		log.info(player.getName() + " disappeared.");
 		player.sendMessage(ChatColor.RED + "Poof!");
-/*
-		Plugin plugin = getServer().getPluginManager().getPlugin("FindMe");
-		if (plugin != null)
-		{
-			FindMe findMe = (FindMe) plugin;
-			findMe.hidePlayer(player);
-		}
-		*/
 	}
 
 	public void reappear(Player player)
@@ -271,14 +262,6 @@ public class VanishNoPickup extends JavaPlugin
 			}
 			log.info(player.getName() + " reappeared.");
 			player.sendMessage(ChatColor.RED + "You have reappeared!");
-/*
-			Plugin plugin = getServer().getPluginManager().getPlugin("FindMe");
-			if (plugin != null)
-			{
-				FindMe findMe = (FindMe) plugin;
-				findMe.unHidePlayer(player);
-			}
-			*/
 		}
 	}
 
