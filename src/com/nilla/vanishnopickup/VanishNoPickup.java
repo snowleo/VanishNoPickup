@@ -95,7 +95,6 @@ public class VanishNoPickup extends JavaPlugin
 		timer.schedule(new UpdateInvisibleTimerTask(true), (1000 * 60) * REFRESH_TIMER);
 	}
 
-	@SuppressWarnings("static-access")
 	public void setupPermissions()
 	{
 		Plugin test = this.getServer().getPluginManager().getPlugin("Permissions");
