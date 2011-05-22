@@ -109,7 +109,7 @@ public class VanishNoPickup extends JavaPlugin
 			}
 			else
 			{
-				log.info(getDescription().getName() + " version " + getDescription().getVersion() + "not enabled. Permissions not detected");
+				log.info("[" + getDescription().getName() + "] Permissions not detected.");
 			}
 		}
 	}
