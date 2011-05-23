@@ -41,8 +41,17 @@ public class VanishNoPickupPlayerListener extends PlayerListener
 	@Override
 	public void onPlayerTeleport(PlayerTeleportEvent event)
 	{
-		if (event.isCancelled()) { return; }
-		plugin.updateInvisibleOnTimer();
+		if (event.isCancelled())
+			return;
+
+		Player player = event.getPlayer();
+
+		// Make it so this player can't see anyone invisible around them
+		plugin.updateInvisible(player);
+
+		// Make it so no one around this player will see them if they're invisible
+		if (plugin.invisible.contains(player.getName()))
+			plugin.updateInvisibleForPlayerDelayed(player);
 	}
 	
 	

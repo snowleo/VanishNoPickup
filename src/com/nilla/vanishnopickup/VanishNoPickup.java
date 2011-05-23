@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
-// import java.util.Timer;
-// import java.util.TimerTask;
 import java.util.logging.Logger;
 
 import net.minecraft.server.Packet20NamedEntitySpawn;
@@ -24,6 +22,7 @@ import org.bukkit.event.Event.Priority;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.config.Configuration;
 
 import com.nijiko.permissions.PermissionHandler;
@@ -42,7 +41,6 @@ public class VanishNoPickup extends JavaPlugin
 	
 	public Configuration config;
 	public int RANGE;
-	public int TOTAL_REFRESHES;
 	public int REFRESH_TIMER;
 
 	//private Timer timer = new Timer();
@@ -53,10 +51,11 @@ public class VanishNoPickup extends JavaPlugin
 	private final VanishNoPickupEntityListener entityListener = new VanishNoPickupEntityListener(this);
 	private final VanishNoPickupPlayerListener playerListener = new VanishNoPickupPlayerListener(this);
 	protected final Logger log = Logger.getLogger("Minecraft");
+	protected BukkitScheduler scheduler;
 
 	public void onDisable()
 	{
-		//timer.cancel();
+		scheduler.cancelTasks(this);
 		log.info("[" + getDescription().getName() + "] " + getDescription().getVersion() + " disabled.");
 	}
 
@@ -71,7 +70,7 @@ public class VanishNoPickup extends JavaPlugin
 		
 		//Load the config if it's there
 		try{
-			config.load();	
+			config.load();
 		}
 		catch(Exception ex){
 			//Ignore the errors
@@ -79,8 +78,7 @@ public class VanishNoPickup extends JavaPlugin
 		
 		//Load our variables from configuration
 		RANGE = config.getInt("range", 512);
-		TOTAL_REFRESHES = config.getInt("total_refreshes", 10);
-		REFRESH_TIMER = config.getInt("refresh_timer", 2);
+		REFRESH_TIMER = config.getInt("refresh_delay", 20);
 		
 		//Save the configuration(especially if it wasn't before)
 		config.save();
@@ -93,7 +91,9 @@ public class VanishNoPickup extends JavaPlugin
 		
 		log.info("[" + getDescription().getName() + "] " + getDescription().getVersion() + " enabled.");
 
-		//timer.schedule(new UpdateInvisibleTimerTask(), 10, (1000 * 60) * REFRESH_TIMER);
+		scheduler = getServer().getScheduler();
+		scheduler.scheduleSyncRepeatingTask(this, new UpdateInvisibleTimerTask(),
+			10, 20 * REFRESH_TIMER);
 	}
 
 	public void setupPermissions()
@@ -234,7 +234,8 @@ public class VanishNoPickup extends JavaPlugin
 		if ((!force) && (check(p2, "vanish.dont.hide")))
 			return;
 
-		if (getDistance(p1, p2) > RANGE)
+		double dist = getDistance(p1, p2);
+		if (dist > RANGE)
 			return;
 
 		CraftPlayer hide = (CraftPlayer) p1;
@@ -342,27 +343,38 @@ public class VanishNoPickup extends JavaPlugin
 		return Math.sqrt(Math.pow(loc1.getX() - loc2.getX(), 2) + Math.pow(loc1.getY() - loc2.getY(), 2) + Math.pow(loc1.getZ() - loc2.getZ(), 2));
 	}
 
-	public void updateInvisibleOnTimer()
+	/* When you call something during a teleport event, the player
+	 * is still at the originating position.  This schedules an
+	 * update the next tick. */
+	public void updateInvisibleForPlayerDelayed(Player player)
 	{
-		updateInvisibleForAll();
-		// for (int i=0; i < TOTAL_REFRESHES; i++)
-		// {
-		// 	timer.schedule(new UpdateInvisibleTimerTask(), i * 1000 + 50);
-		// }
+		scheduler.scheduleSyncDelayedTask(this, new UpdateInvisibleTimerTask(player.getName()));
 	}
 
-	// public class UpdateInvisibleTimerTask extends TimerTask
-	// {
-	// 	public UpdateInvisibleTimerTask()
-	// 	{
-	// 	}
+	protected class UpdateInvisibleTimerTask implements Runnable
+	{
+		protected String name;
 
-	// 	public void run()
-	// 	{
-	// 		updateInvisibleForAll();
-	// 	}
-	// }
-	
+		public UpdateInvisibleTimerTask()
+		{
+			this(null);
+		}
+
+		public UpdateInvisibleTimerTask(String name)
+		{
+			this.name = name;
+		}
+
+		public void run()
+		{
+			if (name == null) {
+				updateInvisibleForAll();
+			} else {
+				Player p = getServer().getPlayer(name);
+				updateInvisibleForPlayer(p);
+			}
+		}
+	}
 	
 	public void toggleNoPickup(Player player){
 		if (nopickups.contains(player.getName())) {
