@@ -3,6 +3,8 @@ package com.nilla.vanishnopickup;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 // import java.util.Timer;
 // import java.util.TimerTask;
 import java.util.logging.Logger;
@@ -45,8 +47,8 @@ public class VanishNoPickup extends JavaPlugin
 
 	//private Timer timer = new Timer();
 
-	public List<Player> invisible = new ArrayList<Player>();
-	public List<Player> nopickups = new ArrayList<Player>();
+	public Set<String> invisible = new HashSet<String>();
+	public Set<String> nopickups = new HashSet<String>();
 
 	private final VanishNoPickupEntityListener entityListener = new VanishNoPickupEntityListener(this);
 	private final VanishNoPickupPlayerListener playerListener = new VanishNoPickupPlayerListener(this);
@@ -137,6 +139,16 @@ public class VanishNoPickup extends JavaPlugin
 		}
 	}
 
+	/* Returns up-to-date Player objects for each name given to it */
+	public List<Player> PlayersFromNames(Iterable<String> names) {
+		List<Player> players = new ArrayList<Player>();
+		for (String name : names) {
+			Player player = getServer().getPlayer(name);
+			players.add(player);
+		}
+		return players;
+	}
+
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args)
 	{
@@ -176,7 +188,8 @@ public class VanishNoPickup extends JavaPlugin
 		}
 		String message = "List of Invisible Players: ";
 		int i = 0;
-		for (Player InvisiblePlayer : invisible)
+		List<Player> invisiblePlayers = PlayersFromNames(invisible);
+		for (Player InvisiblePlayer : invisiblePlayers)
 		{
 			message += InvisiblePlayer.getDisplayName();
 			i++;
@@ -240,14 +253,8 @@ public class VanishNoPickup extends JavaPlugin
 	/* Sets a player to be invisible */
 	public void vanish(Player player)
 	{
-		if (invisible.contains(player))
-		{
-			reappear(player);
-			EnablePickups(player);
-			return;
-		}
 		DisablePickups(player);
-		invisible.add(player);
+		invisible.add(player.getName());
 		updateInvisibleForPlayer(player);
 		log.info(player.getName() + " disappeared.");
 		player.sendMessage(ChatColor.RED + "Poof!");
@@ -256,9 +263,9 @@ public class VanishNoPickup extends JavaPlugin
 	/* Sets a player to be visible again */
 	public void reappear(Player player)
 	{
-		if (invisible.contains(player))
+		if (invisible.contains(player.getName()))
 		{
-			invisible.remove(player);
+			invisible.remove(player.getName());
 			Player[] playerList = getServer().getOnlinePlayers();
 			for (Player p : playerList)
 			{
@@ -273,7 +280,8 @@ public class VanishNoPickup extends JavaPlugin
 	public void reappearAll()
 	{
 		log.info("Everyone is going reappear.");
-		for (Player InvisiblePlayer : invisible)
+		List<Player> invisiblePlayers = PlayersFromNames(invisible);
+		for (Player InvisiblePlayer : invisiblePlayers)
 		{
 			reappear(InvisiblePlayer);
 		}
@@ -301,7 +309,8 @@ public class VanishNoPickup extends JavaPlugin
 	/* Makes it so no one can see any invisible players */
 	public void updateInvisibleForAll()
 	{
-		for (Player invisiblePlayer : invisible)
+		List<Player> invisiblePlayers = PlayersFromNames(invisible);
+		for (Player invisiblePlayer : invisiblePlayers)
 		{
 			updateInvisibleForPlayer(invisiblePlayer);
 		}
@@ -310,7 +319,8 @@ public class VanishNoPickup extends JavaPlugin
 	/* Makes it so a specific player can't see any invisible people */
 	public void updateInvisible(Player player)
 	{
-		for (Player invisiblePlayer : invisible)
+		List<Player> invisiblePlayers = PlayersFromNames(invisible);
+		for (Player invisiblePlayer : invisiblePlayers)
 		{
 			invisible(invisiblePlayer, player);
 		}
@@ -349,25 +359,19 @@ public class VanishNoPickup extends JavaPlugin
 	
 	
 	public void toggleNoPickup(Player player){
-		
-		if (nopickups.contains(player)){
+		if (nopickups.contains(player.getName())) {
 			EnablePickups(player);
-		}
-		else{
+		} else {
 			DisablePickups(player);			
 		}
 	}
 	private void DisablePickups(Player player){
 		player.sendMessage(ChatColor.RED + "Disabling Picking Up of Items");
-		if (!nopickups.contains(player)){
-			nopickups.add(player);
-		}
+		nopickups.add(player.getName());
 	}
 	private void EnablePickups(Player player){
 		player.sendMessage(ChatColor.RED + "Enabling Picking Up of Items");
-		if (nopickups.contains(player)){
-			nopickups.remove(player);
-		}
+		nopickups.remove(player.getName());
 	}
 
 	private void nopickup_list(CommandSender sender)
@@ -380,7 +384,8 @@ public class VanishNoPickup extends JavaPlugin
 		}
 		String message = "List of Players with Pickups Disabled: ";
 		int i = 0;
-		for (Player thisPlayer : nopickups)
+		List<Player> nopickupsPlayers = PlayersFromNames(nopickups);
+		for (Player thisPlayer : nopickupsPlayers)
 		{
 			message += thisPlayer.getDisplayName();
 			i++;

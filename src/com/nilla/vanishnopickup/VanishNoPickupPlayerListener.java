@@ -27,20 +27,14 @@ public class VanishNoPickupPlayerListener extends PlayerListener
 	public void onPlayerJoin(PlayerJoinEvent event)
 	{
 		Player player = event.getPlayer();
-		if(plugin.nopickups.contains(player)){
+		if(plugin.nopickups.contains(player.getName())){
 			player.sendMessage(ChatColor.RED + "You have item pickups disabled!" + ChatColor.WHITE);
 		}
-		if(plugin.invisible.contains(player)){
+		if(plugin.invisible.contains(player.getName())){
 			player.sendMessage(ChatColor.RED + "*Poof* You are currently invisible!" + ChatColor.WHITE);
 			
-			plugin.invisible.remove(player);
-			
-			//Try this instead of timer
 			plugin.vanish(player);
-			
 		}
-		
-		
 	}
 
 	@Override
@@ -56,9 +50,8 @@ public class VanishNoPickupPlayerListener extends PlayerListener
 		
 		Player player = event.getPlayer();
 	
-		//player.sendMessage(ChatColor.RED + "Picking UP: ");
-		if(plugin.nopickups.contains(player)){
-			event.setCancelled(true);	
+		if(plugin.nopickups.contains(player.getName())) {
+			event.setCancelled(true);
 		}
 		
 	}
