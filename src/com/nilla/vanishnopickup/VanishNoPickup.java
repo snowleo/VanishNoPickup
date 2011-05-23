@@ -90,9 +90,8 @@ public class VanishNoPickup extends JavaPlugin
 		pm.registerEvent(Event.Type.ENTITY_TARGET, entityListener, Priority.Normal, this);
 		
 		log.info("[" + getDescription().getName() + "] " + getDescription().getVersion() + " enabled.");
-		 
 
-		timer.schedule(new UpdateInvisibleTimerTask(true), (1000 * 60) * REFRESH_TIMER);
+		timer.schedule(new UpdateInvisibleTimerTask(), 10, (1000 * 60) * REFRESH_TIMER);
 	}
 
 	public void setupPermissions()
@@ -306,15 +305,6 @@ public class VanishNoPickup extends JavaPlugin
 		}
 	}
 
-	public void updateInvisibleForAll(boolean startTimer)
-	{
-		updateInvisibleForAll();
-		if (startTimer)
-		{
-			timer.schedule(new UpdateInvisibleTimerTask(true), (1000 * 60) * REFRESH_TIMER);
-		}
-	}
-
 	public void updateInvisible(Player player)
 	{
 		for (Player invisiblePlayer : invisible)
@@ -350,21 +340,13 @@ public class VanishNoPickup extends JavaPlugin
 
 	public class UpdateInvisibleTimerTask extends TimerTask
 	{
-		private boolean startTimer = false;
-
 		public UpdateInvisibleTimerTask()
 		{
-
-		}
-
-		public UpdateInvisibleTimerTask(boolean startTimer)
-		{
-			this.startTimer = startTimer;
 		}
 
 		public void run()
 		{
-			updateInvisibleForAll(startTimer);
+			updateInvisibleForAll();
 		}
 	}
 	
