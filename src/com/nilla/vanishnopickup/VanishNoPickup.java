@@ -329,12 +329,9 @@ public class VanishNoPickup extends JavaPlugin
 	public void updateInvisibleOnTimer()
 	{
 		updateInvisibleForAll();
-		Timer timer = new Timer();
-		int i = 0;
-		while (i < TOTAL_REFRESHES)
+		for (int i=0; i < TOTAL_REFRESHES; i++)
 		{
-			i++;
-			timer.schedule(new UpdateInvisibleTimerTask(), i * 1000);
+			timer.schedule(new UpdateInvisibleTimerTask(), i * 1000 + 50);
 		}
 	}
 
