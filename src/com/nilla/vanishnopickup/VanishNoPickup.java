@@ -41,6 +41,7 @@ public class VanishNoPickup extends JavaPlugin
 	
 	public Configuration config;
 	public int RANGE;
+	public int RANGE_SQUARED;
 	public int REFRESH_TIMER;
 
 	//private Timer timer = new Timer();
@@ -78,6 +79,7 @@ public class VanishNoPickup extends JavaPlugin
 		
 		//Load our variables from configuration
 		RANGE = config.getInt("range", 512);
+		RANGE_SQUARED = RANGE*RANGE;
 		REFRESH_TIMER = config.getInt("refresh_delay", 20);
 		
 		//Save the configuration(especially if it wasn't before)
@@ -234,8 +236,7 @@ public class VanishNoPickup extends JavaPlugin
 		if ((!force) && (check(p2, "vanish.dont.hide")))
 			return;
 
-		double dist = getDistance(p1, p2);
-		if (dist > RANGE)
+		if (getDistanceSquared(p1, p2) > RANGE_SQUARED)
 			return;
 
 		CraftPlayer hide = (CraftPlayer) p1;
@@ -249,7 +250,7 @@ public class VanishNoPickup extends JavaPlugin
 		if (p1.equals(p2))
 			return;
 
-		if (getDistance(p1, p2) > RANGE)
+		if (getDistanceSquared(p1, p2) > RANGE_SQUARED)
 			return;
 
 		CraftPlayer unHide = (CraftPlayer) p1;
@@ -333,14 +334,14 @@ public class VanishNoPickup extends JavaPlugin
 		}
 	}
 
-	public double getDistance(Player player1, Player player2)
+	public double getDistanceSquared(Player player1, Player player2)
 	{
 		if (player1.getWorld() != player2.getWorld())
 			return Double.POSITIVE_INFINITY;
 
 		Location loc1 = player1.getLocation();
 		Location loc2 = player2.getLocation();
-		return Math.sqrt(Math.pow(loc1.getX() - loc2.getX(), 2) + Math.pow(loc1.getY() - loc2.getY(), 2) + Math.pow(loc1.getZ() - loc2.getZ(), 2));
+		return Math.pow(loc1.getX() - loc2.getX(), 2) + Math.pow(loc1.getZ() - loc2.getZ(), 2);
 	}
 
 	/* When you call something during a teleport event, the player
