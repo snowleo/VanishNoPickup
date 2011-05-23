@@ -3,8 +3,8 @@ package com.nilla.vanishnopickup;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+// import java.util.Timer;
+// import java.util.TimerTask;
 import java.util.logging.Logger;
 
 import net.minecraft.server.Packet20NamedEntitySpawn;
@@ -43,7 +43,7 @@ public class VanishNoPickup extends JavaPlugin
 	public int TOTAL_REFRESHES;
 	public int REFRESH_TIMER;
 
-	private Timer timer = new Timer();
+	//private Timer timer = new Timer();
 
 	public List<Player> invisible = new ArrayList<Player>();
 	public List<Player> nopickups = new ArrayList<Player>();
@@ -54,7 +54,7 @@ public class VanishNoPickup extends JavaPlugin
 
 	public void onDisable()
 	{
-		timer.cancel();
+		//timer.cancel();
 		log.info("[" + getDescription().getName() + "] " + getDescription().getVersion() + " disabled.");
 	}
 
@@ -91,7 +91,7 @@ public class VanishNoPickup extends JavaPlugin
 		
 		log.info("[" + getDescription().getName() + "] " + getDescription().getVersion() + " enabled.");
 
-		timer.schedule(new UpdateInvisibleTimerTask(), 10, (1000 * 60) * REFRESH_TIMER);
+		//timer.schedule(new UpdateInvisibleTimerTask(), 10, (1000 * 60) * REFRESH_TIMER);
 	}
 
 	public void setupPermissions()
@@ -329,23 +329,23 @@ public class VanishNoPickup extends JavaPlugin
 	public void updateInvisibleOnTimer()
 	{
 		updateInvisibleForAll();
-		for (int i=0; i < TOTAL_REFRESHES; i++)
-		{
-			timer.schedule(new UpdateInvisibleTimerTask(), i * 1000 + 50);
-		}
+		// for (int i=0; i < TOTAL_REFRESHES; i++)
+		// {
+		// 	timer.schedule(new UpdateInvisibleTimerTask(), i * 1000 + 50);
+		// }
 	}
 
-	public class UpdateInvisibleTimerTask extends TimerTask
-	{
-		public UpdateInvisibleTimerTask()
-		{
-		}
+	// public class UpdateInvisibleTimerTask extends TimerTask
+	// {
+	// 	public UpdateInvisibleTimerTask()
+	// 	{
+	// 	}
 
-		public void run()
-		{
-			updateInvisibleForAll();
-		}
-	}
+	// 	public void run()
+	// 	{
+	// 		updateInvisibleForAll();
+	// 	}
+	// }
 	
 	
 	public void toggleNoPickup(Player player){
@@ -391,7 +391,4 @@ public class VanishNoPickup extends JavaPlugin
 		}
 		sender.sendMessage(ChatColor.RED + message + ChatColor.WHITE + " ");
 	}
-
-	
-
 }
