@@ -207,10 +207,17 @@ public class VanishNoPickup extends JavaPlugin
 		if (sender instanceof Player)
 		{
 			Player player = (Player) sender;
-			vanish(player);
-			return;
+
+			if (!invisible.contains(player.getName())) {
+				DisablePickups(player);
+				vanish(player);
+			} else {
+				EnablePickups(player);
+				reappear(player);
+			}
+		} else {
+			sender.sendMessage("That doesn't work from here");
 		}
-		sender.sendMessage("That doesn't work from here");
 	}
 
 	private void invisible(Player p1, Player p2)
@@ -253,7 +260,6 @@ public class VanishNoPickup extends JavaPlugin
 	/* Sets a player to be invisible */
 	public void vanish(Player player)
 	{
-		DisablePickups(player);
 		invisible.add(player.getName());
 		updateInvisibleForPlayer(player);
 		log.info(player.getName() + " disappeared.");
@@ -365,11 +371,13 @@ public class VanishNoPickup extends JavaPlugin
 			DisablePickups(player);			
 		}
 	}
-	private void DisablePickups(Player player){
+
+	public void DisablePickups(Player player){
 		player.sendMessage(ChatColor.RED + "Disabling Picking Up of Items");
 		nopickups.add(player.getName());
 	}
-	private void EnablePickups(Player player){
+
+	public void EnablePickups(Player player){
 		player.sendMessage(ChatColor.RED + "Enabling Picking Up of Items");
 		nopickups.remove(player.getName());
 	}

@@ -27,12 +27,13 @@ public class VanishNoPickupPlayerListener extends PlayerListener
 	public void onPlayerJoin(PlayerJoinEvent event)
 	{
 		Player player = event.getPlayer();
+
 		if(plugin.nopickups.contains(player.getName())){
-			player.sendMessage(ChatColor.RED + "You have item pickups disabled!" + ChatColor.WHITE);
+			player.sendMessage(ChatColor.RED + "You have item pickups disabled!");
 		}
+
 		if(plugin.invisible.contains(player.getName())){
-			player.sendMessage(ChatColor.RED + "*Poof* You are currently invisible!" + ChatColor.WHITE);
-			
+			player.sendMessage(ChatColor.RED + "You are currently invisible!");
 			plugin.vanish(player);
 		}
 	}
