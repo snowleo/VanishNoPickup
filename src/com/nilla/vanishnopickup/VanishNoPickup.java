@@ -205,21 +205,39 @@ public class VanishNoPickup extends JavaPlugin
 		invisible(p1, p2, false);
 	}
 
+	/* Makes p1 invisible to p2 */
 	private void invisible(Player p1, Player p2, boolean force)
 	{
-		if ((!force) && (check(p2, "vanish.dont.hide"))) { return; }
+		if (p1.equals(p2))
+			return;
+
+		if ((!force) && (check(p2, "vanish.dont.hide")))
+			return;
+
+		if (getDistance(p1, p2) > RANGE)
+			return;
+
 		CraftPlayer hide = (CraftPlayer) p1;
 		CraftPlayer hideFrom = (CraftPlayer) p2;
 		hideFrom.getHandle().netServerHandler.sendPacket(new Packet29DestroyEntity(hide.getEntityId()));
 	}
 
+	/* Makes p1 visible to p2 */
 	private void uninvisible(Player p1, Player p2)
 	{
+		if (p1.equals(p2))
+			return;
+
+		if (getDistance(p1, p2) > RANGE)
+			return;
+
 		CraftPlayer unHide = (CraftPlayer) p1;
 		CraftPlayer unHideFrom = (CraftPlayer) p2;
+		unHideFrom.getHandle().netServerHandler.sendPacket(new Packet29DestroyEntity(unHide.getEntityId()));
 		unHideFrom.getHandle().netServerHandler.sendPacket(new Packet20NamedEntitySpawn(unHide.getHandle()));
 	}
 
+	/* Sets a player to be invisible */
 	public void vanish(Player player)
 	{
 		if (invisible.contains(player))
@@ -230,39 +248,28 @@ public class VanishNoPickup extends JavaPlugin
 		}
 		DisablePickups(player);
 		invisible.add(player);
-		Player[] playerList = getServer().getOnlinePlayers();
-		for (Player p : playerList)
-		{
-			if (getDistance(player, p) <= RANGE && !p.equals(player))
-			{
-				invisible(player, p);
-			}
-		}
+		updateInvisibleForPlayer(player);
 		log.info(player.getName() + " disappeared.");
 		player.sendMessage(ChatColor.RED + "Poof!");
 	}
 
+	/* Sets a player to be visible again */
 	public void reappear(Player player)
 	{
 		if (invisible.contains(player))
 		{
 			invisible.remove(player);
-			// make someone really disappear if there's any doubt, should remove
-			// cloning
-			updateInvisibleForPlayer(player, true);
 			Player[] playerList = getServer().getOnlinePlayers();
 			for (Player p : playerList)
 			{
-				if (getDistance(player, p) < RANGE && !p.equals(player))
-				{
-					uninvisible(player, p);
-				}
+				uninvisible(player, p);
 			}
 			log.info(player.getName() + " reappeared.");
 			player.sendMessage(ChatColor.RED + "You have reappeared!");
 		}
 	}
 
+	/* Makes everyone visible again */
 	public void reappearAll()
 	{
 		log.info("Everyone is going reappear.");
@@ -278,41 +285,34 @@ public class VanishNoPickup extends JavaPlugin
 		updateInvisibleForPlayer(player, false);
 	}
 
+	/* Makes it so no one can see a specific player */
 	public void updateInvisibleForPlayer(Player player, boolean force)
 	{
+		if (player == null || !player.isOnline())
+			return;
+
 		Player[] playerList = getServer().getOnlinePlayers();
 		for (Player p : playerList)
 		{
-			if (getDistance(player, p) <= RANGE && !p.equals(player))
-			{
-				invisible(player, p, force);
-			}
+			invisible(player, p, force);
 		}
 	}
 
+	/* Makes it so no one can see any invisible players */
 	public void updateInvisibleForAll()
 	{
-		Player[] playerList = getServer().getOnlinePlayers();
 		for (Player invisiblePlayer : invisible)
 		{
-			for (Player p : playerList)
-			{
-				if (getDistance(invisiblePlayer, p) <= RANGE && !p.equals(invisiblePlayer))
-				{
-					invisible(invisiblePlayer, p);
-				}
-			}
+			updateInvisibleForPlayer(invisiblePlayer);
 		}
 	}
 
+	/* Makes it so a specific player can't see any invisible people */
 	public void updateInvisible(Player player)
 	{
 		for (Player invisiblePlayer : invisible)
 		{
-			if (getDistance(invisiblePlayer, player) <= RANGE && !player.equals(invisiblePlayer))
-			{
-				invisible(invisiblePlayer, player);
-			}
+			invisible(invisiblePlayer, player);
 		}
 	}
 
