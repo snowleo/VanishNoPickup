@@ -52,9 +52,12 @@ public class VanishNoPickupEntityListener extends EntityListener
 		Player player = (Player)e.getTarget();
 		
 		//Make sure this player is invisible
-		if (!plugin.invisible.contains(player)){return;}
+		if (!plugin.invisible.contains(player.getName()))
+			return;
+
 		//Check the permissions
-		if (!plugin.check(player, "vanish.noaggromobs")) { return; }
+		if (!plugin.check(player, "vanish.noaggromobs"))
+			return;
 		
 		//Make sure it's a hostile mob
 		LivingEntity le = (LivingEntity) e.getEntity();

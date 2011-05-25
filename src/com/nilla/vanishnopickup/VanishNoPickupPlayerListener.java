@@ -27,27 +27,31 @@ public class VanishNoPickupPlayerListener extends PlayerListener
 	public void onPlayerJoin(PlayerJoinEvent event)
 	{
 		Player player = event.getPlayer();
-		if(plugin.nopickups.contains(player)){
-			player.sendMessage(ChatColor.RED + "You have item pickups disabled!" + ChatColor.WHITE);
+
+		if(plugin.nopickups.contains(player.getName())){
+			player.sendMessage(ChatColor.RED + "You have item pickups disabled!");
 		}
-		if(plugin.invisible.contains(player)){
-			player.sendMessage(ChatColor.RED + "*Poof* You are currently invisible!" + ChatColor.WHITE);
-			
-			plugin.invisible.remove(player);
-			
-			//Try this instead of timer
+
+		if(plugin.invisible.contains(player.getName())){
+			player.sendMessage(ChatColor.RED + "You are currently invisible!");
 			plugin.vanish(player);
-			
 		}
-		
-		
 	}
 
 	@Override
 	public void onPlayerTeleport(PlayerTeleportEvent event)
 	{
-		if (event.isCancelled()) { return; }
-		plugin.updateInvisibleOnTimer();
+		if (event.isCancelled())
+			return;
+
+		Player player = event.getPlayer();
+
+		// Make it so this player can't see anyone invisible around them
+		plugin.updateInvisible(player);
+
+		// Make it so no one around this player will see them if they're invisible
+		if (plugin.invisible.contains(player.getName()))
+			plugin.updateInvisibleForPlayerDelayed(player);
 	}
 	
 	
@@ -56,9 +60,8 @@ public class VanishNoPickupPlayerListener extends PlayerListener
 		
 		Player player = event.getPlayer();
 	
-		//player.sendMessage(ChatColor.RED + "Picking UP: ");
-		if(plugin.nopickups.contains(player)){
-			event.setCancelled(true);	
+		if(plugin.nopickups.contains(player.getName())) {
+			event.setCancelled(true);
 		}
 		
 	}

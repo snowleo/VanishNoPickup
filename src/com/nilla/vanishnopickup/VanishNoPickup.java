@@ -3,8 +3,8 @@ package com.nilla.vanishnopickup;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import net.minecraft.server.Packet20NamedEntitySpawn;
@@ -22,9 +22,9 @@ import org.bukkit.event.Event.Priority;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.config.Configuration;
 
-//import com.echo28.bukkit.findme.FindMe;
 import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
 
@@ -41,21 +41,22 @@ public class VanishNoPickup extends JavaPlugin
 	
 	public Configuration config;
 	public int RANGE;
-	public int TOTAL_REFRESHES;
+	public int RANGE_SQUARED;
 	public int REFRESH_TIMER;
 
-	private Timer timer = new Timer();
+	//private Timer timer = new Timer();
 
-	public List<Player> invisible = new ArrayList<Player>();
-	public List<Player> nopickups = new ArrayList<Player>();
+	public Set<String> invisible = new HashSet<String>();
+	public Set<String> nopickups = new HashSet<String>();
 
 	private final VanishNoPickupEntityListener entityListener = new VanishNoPickupEntityListener(this);
 	private final VanishNoPickupPlayerListener playerListener = new VanishNoPickupPlayerListener(this);
 	protected final Logger log = Logger.getLogger("Minecraft");
+	protected BukkitScheduler scheduler;
 
 	public void onDisable()
 	{
-		timer.cancel();
+		scheduler.cancelTasks(this);
 		log.info("[" + getDescription().getName() + "] " + getDescription().getVersion() + " disabled.");
 	}
 
@@ -70,7 +71,7 @@ public class VanishNoPickup extends JavaPlugin
 		
 		//Load the config if it's there
 		try{
-			config.load();	
+			config.load();
 		}
 		catch(Exception ex){
 			//Ignore the errors
@@ -78,8 +79,8 @@ public class VanishNoPickup extends JavaPlugin
 		
 		//Load our variables from configuration
 		RANGE = config.getInt("range", 512);
-		TOTAL_REFRESHES = config.getInt("total_refreshes", 10);
-		REFRESH_TIMER = config.getInt("refresh_timer", 2);
+		RANGE_SQUARED = RANGE*RANGE;
+		REFRESH_TIMER = config.getInt("refresh_delay", 20);
 		
 		//Save the configuration(especially if it wasn't before)
 		config.save();
@@ -91,12 +92,12 @@ public class VanishNoPickup extends JavaPlugin
 		pm.registerEvent(Event.Type.ENTITY_TARGET, entityListener, Priority.Normal, this);
 		
 		log.info("[" + getDescription().getName() + "] " + getDescription().getVersion() + " enabled.");
-		 
 
-		timer.schedule(new UpdateInvisibleTimerTask(true), (1000 * 60) * REFRESH_TIMER);
+		scheduler = getServer().getScheduler();
+		scheduler.scheduleSyncRepeatingTask(this, new UpdateInvisibleTimerTask(),
+			10, 20 * REFRESH_TIMER);
 	}
 
-	@SuppressWarnings("static-access")
 	public void setupPermissions()
 	{
 		Plugin test = this.getServer().getPluginManager().getPlugin("Permissions");
@@ -110,7 +111,7 @@ public class VanishNoPickup extends JavaPlugin
 			}
 			else
 			{
-				log.info(getDescription().getName() + " version " + getDescription().getVersion() + "not enabled. Permissions not detected");
+				log.info("[" + getDescription().getName() + "] Permissions not detected.");
 			}
 		}
 	}
@@ -138,6 +139,16 @@ public class VanishNoPickup extends JavaPlugin
 		{
 			return false;
 		}
+	}
+
+	/* Returns up-to-date Player objects for each name given to it */
+	public List<Player> PlayersFromNames(Iterable<String> names) {
+		List<Player> players = new ArrayList<Player>();
+		for (String name : names) {
+			Player player = getServer().getPlayer(name);
+			players.add(player);
+		}
+		return players;
 	}
 
 	@Override
@@ -179,7 +190,8 @@ public class VanishNoPickup extends JavaPlugin
 		}
 		String message = "List of Invisible Players: ";
 		int i = 0;
-		for (Player InvisiblePlayer : invisible)
+		List<Player> invisiblePlayers = PlayersFromNames(invisible);
+		for (Player InvisiblePlayer : invisiblePlayers)
 		{
 			message += InvisiblePlayer.getDisplayName();
 			i++;
@@ -197,10 +209,17 @@ public class VanishNoPickup extends JavaPlugin
 		if (sender instanceof Player)
 		{
 			Player player = (Player) sender;
-			vanish(player);
-			return;
+
+			if (!invisible.contains(player.getName())) {
+				DisablePickups(player);
+				vanish(player);
+			} else {
+				EnablePickups(player);
+				reappear(player);
+			}
+		} else {
+			sender.sendMessage("That doesn't work from here");
 		}
-		sender.sendMessage("That doesn't work from here");
 	}
 
 	private void invisible(Player p1, Player p2)
@@ -208,84 +227,69 @@ public class VanishNoPickup extends JavaPlugin
 		invisible(p1, p2, false);
 	}
 
+	/* Makes p1 invisible to p2 */
 	private void invisible(Player p1, Player p2, boolean force)
 	{
-		if ((!force) && (check(p2, "vanish.dont.hide"))) { return; }
+		if (p1.equals(p2))
+			return;
+
+		if ((!force) && (check(p2, "vanish.dont.hide")))
+			return;
+
+		if (getDistanceSquared(p1, p2) > RANGE_SQUARED)
+			return;
+
 		CraftPlayer hide = (CraftPlayer) p1;
 		CraftPlayer hideFrom = (CraftPlayer) p2;
 		hideFrom.getHandle().netServerHandler.sendPacket(new Packet29DestroyEntity(hide.getEntityId()));
 	}
 
+	/* Makes p1 visible to p2 */
 	private void uninvisible(Player p1, Player p2)
 	{
+		if (p1.equals(p2))
+			return;
+
+		if (getDistanceSquared(p1, p2) > RANGE_SQUARED)
+			return;
+
 		CraftPlayer unHide = (CraftPlayer) p1;
 		CraftPlayer unHideFrom = (CraftPlayer) p2;
+		unHideFrom.getHandle().netServerHandler.sendPacket(new Packet29DestroyEntity(unHide.getEntityId()));
 		unHideFrom.getHandle().netServerHandler.sendPacket(new Packet20NamedEntitySpawn(unHide.getHandle()));
 	}
 
+	/* Sets a player to be invisible */
 	public void vanish(Player player)
 	{
-		if (invisible.contains(player))
-		{
-			reappear(player);
-			EnablePickups(player);
-			return;
-		}
-		DisablePickups(player);
-		invisible.add(player);
-		Player[] playerList = getServer().getOnlinePlayers();
-		for (Player p : playerList)
-		{
-			if (getDistance(player, p) <= RANGE && !p.equals(player))
-			{
-				invisible(player, p);
-			}
-		}
+		invisible.add(player.getName());
+		updateInvisibleForPlayer(player);
 		log.info(player.getName() + " disappeared.");
 		player.sendMessage(ChatColor.RED + "Poof!");
-/*
-		Plugin plugin = getServer().getPluginManager().getPlugin("FindMe");
-		if (plugin != null)
-		{
-			FindMe findMe = (FindMe) plugin;
-			findMe.hidePlayer(player);
-		}
-		*/
 	}
 
+	/* Sets a player to be visible again */
 	public void reappear(Player player)
 	{
-		if (invisible.contains(player))
+		if (invisible.contains(player.getName()))
 		{
-			invisible.remove(player);
-			// make someone really disappear if there's any doubt, should remove
-			// cloning
-			updateInvisibleForPlayer(player, true);
+			invisible.remove(player.getName());
 			Player[] playerList = getServer().getOnlinePlayers();
 			for (Player p : playerList)
 			{
-				if (getDistance(player, p) < RANGE && !p.equals(player))
-				{
-					uninvisible(player, p);
-				}
+				uninvisible(player, p);
 			}
 			log.info(player.getName() + " reappeared.");
 			player.sendMessage(ChatColor.RED + "You have reappeared!");
-/*
-			Plugin plugin = getServer().getPluginManager().getPlugin("FindMe");
-			if (plugin != null)
-			{
-				FindMe findMe = (FindMe) plugin;
-				findMe.unHidePlayer(player);
-			}
-			*/
 		}
 	}
 
+	/* Makes everyone visible again */
 	public void reappearAll()
 	{
 		log.info("Everyone is going reappear.");
-		for (Player InvisiblePlayer : invisible)
+		List<Player> invisiblePlayers = PlayersFromNames(invisible);
+		for (Player InvisiblePlayer : invisiblePlayers)
 		{
 			reappear(InvisiblePlayer);
 		}
@@ -297,113 +301,98 @@ public class VanishNoPickup extends JavaPlugin
 		updateInvisibleForPlayer(player, false);
 	}
 
+	/* Makes it so no one can see a specific player */
 	public void updateInvisibleForPlayer(Player player, boolean force)
 	{
+		if (player == null || !player.isOnline())
+			return;
+
 		Player[] playerList = getServer().getOnlinePlayers();
 		for (Player p : playerList)
 		{
-			if (getDistance(player, p) <= RANGE && !p.equals(player))
-			{
-				invisible(player, p, force);
-			}
+			invisible(player, p, force);
 		}
 	}
 
+	/* Makes it so no one can see any invisible players */
 	public void updateInvisibleForAll()
 	{
-		Player[] playerList = getServer().getOnlinePlayers();
-		for (Player invisiblePlayer : invisible)
+		List<Player> invisiblePlayers = PlayersFromNames(invisible);
+		for (Player invisiblePlayer : invisiblePlayers)
 		{
-			for (Player p : playerList)
-			{
-				if (getDistance(invisiblePlayer, p) <= RANGE && !p.equals(invisiblePlayer))
-				{
-					invisible(invisiblePlayer, p);
-				}
-			}
+			updateInvisibleForPlayer(invisiblePlayer);
 		}
 	}
 
-	public void updateInvisibleForAll(boolean startTimer)
-	{
-		updateInvisibleForAll();
-		if (startTimer)
-		{
-			timer.schedule(new UpdateInvisibleTimerTask(true), (1000 * 60) * REFRESH_TIMER);
-		}
-	}
-
+	/* Makes it so a specific player can't see any invisible people */
 	public void updateInvisible(Player player)
 	{
-		for (Player invisiblePlayer : invisible)
+		List<Player> invisiblePlayers = PlayersFromNames(invisible);
+		for (Player invisiblePlayer : invisiblePlayers)
 		{
-			if (getDistance(invisiblePlayer, player) <= RANGE && !player.equals(invisiblePlayer))
-			{
-				invisible(invisiblePlayer, player);
-			}
+			invisible(invisiblePlayer, player);
 		}
 	}
 
-	public double getDistance(Player player1, Player player2)
+	public double getDistanceSquared(Player player1, Player player2)
 	{
+		if (player1.getWorld() != player2.getWorld())
+			return Double.POSITIVE_INFINITY;
+
 		Location loc1 = player1.getLocation();
-		Location loc2 = player1.getLocation();
-		return Math.sqrt(Math.pow(loc1.getX() - loc2.getX(), 2) + Math.pow(loc1.getY() - loc2.getY(), 2) + Math.pow(loc1.getZ() - loc2.getZ(), 2));
+		Location loc2 = player2.getLocation();
+		return Math.pow(loc1.getX() - loc2.getX(), 2) + Math.pow(loc1.getZ() - loc2.getZ(), 2);
 	}
 
-	public void updateInvisibleOnTimer()
+	/* When you call something during a teleport event, the player
+	 * is still at the originating position.  This schedules an
+	 * update the next tick. */
+	public void updateInvisibleForPlayerDelayed(Player player)
 	{
-		updateInvisibleForAll();
-		Timer timer = new Timer();
-		int i = 0;
-		while (i < TOTAL_REFRESHES)
-		{
-			i++;
-			timer.schedule(new UpdateInvisibleTimerTask(), i * 1000);
-		}
+		scheduler.scheduleSyncDelayedTask(this, new UpdateInvisibleTimerTask(player.getName()));
 	}
 
-	public class UpdateInvisibleTimerTask extends TimerTask
+	protected class UpdateInvisibleTimerTask implements Runnable
 	{
-		private boolean startTimer = false;
+		protected String name;
 
 		public UpdateInvisibleTimerTask()
 		{
-
+			this(null);
 		}
 
-		public UpdateInvisibleTimerTask(boolean startTimer)
+		public UpdateInvisibleTimerTask(String name)
 		{
-			this.startTimer = startTimer;
+			this.name = name;
 		}
 
 		public void run()
 		{
-			updateInvisibleForAll(startTimer);
+			if (name == null) {
+				updateInvisibleForAll();
+			} else {
+				Player p = getServer().getPlayer(name);
+				updateInvisibleForPlayer(p);
+			}
 		}
 	}
 	
-	
 	public void toggleNoPickup(Player player){
-		
-		if (nopickups.contains(player)){
+		if (nopickups.contains(player.getName())) {
 			EnablePickups(player);
-		}
-		else{
+		} else {
 			DisablePickups(player);			
 		}
 	}
-	private void DisablePickups(Player player){
+
+	public void DisablePickups(Player player){
 		player.sendMessage(ChatColor.RED + "Disabling Picking Up of Items");
-		if (!nopickups.contains(player)){
-			nopickups.add(player);
-		}
+		nopickups.add(player.getName());
 	}
-	private void EnablePickups(Player player){
+
+	public void EnablePickups(Player player){
 		player.sendMessage(ChatColor.RED + "Enabling Picking Up of Items");
-		if (nopickups.contains(player)){
-			nopickups.remove(player);
-		}
+		nopickups.remove(player.getName());
 	}
 
 	private void nopickup_list(CommandSender sender)
@@ -416,7 +405,8 @@ public class VanishNoPickup extends JavaPlugin
 		}
 		String message = "List of Players with Pickups Disabled: ";
 		int i = 0;
-		for (Player thisPlayer : nopickups)
+		List<Player> nopickupsPlayers = PlayersFromNames(nopickups);
+		for (Player thisPlayer : nopickupsPlayers)
 		{
 			message += thisPlayer.getDisplayName();
 			i++;
@@ -427,7 +417,4 @@ public class VanishNoPickup extends JavaPlugin
 		}
 		sender.sendMessage(ChatColor.RED + message + ChatColor.WHITE + " ");
 	}
-
-	
-
 }
