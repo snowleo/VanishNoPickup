@@ -51,15 +51,17 @@ public class VanishNoPickup extends JavaPlugin
 
 	private final VanishNoPickupEntityListener entityListener = new VanishNoPickupEntityListener(this);
 	private final VanishNoPickupPlayerListener playerListener = new VanishNoPickupPlayerListener(this);
-	protected final Logger log = Logger.getLogger("Minecraft");
+	protected static final Logger log = Logger.getLogger("Minecraft");
 	protected BukkitScheduler scheduler;
 
+        @Override
 	public void onDisable()
 	{
 		scheduler.cancelTasks(this);
 		log.info("[" + getDescription().getName() + "] " + getDescription().getVersion() + " disabled.");
 	}
 
+        @Override
 	public void onEnable()
 	{
 		//Setup Permissions 
@@ -230,6 +232,12 @@ public class VanishNoPickup extends JavaPlugin
 	/* Makes p1 invisible to p2 */
 	private void invisible(Player p1, Player p2, boolean force)
 	{
+                if(p1 == null){
+                    return;
+                }
+                if(p2 == null){
+                    return;
+                }
 		if (p1.equals(p2))
 			return;
 
