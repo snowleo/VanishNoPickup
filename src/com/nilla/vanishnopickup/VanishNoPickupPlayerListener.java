@@ -39,8 +39,8 @@ public class VanishNoPickupPlayerListener extends PlayerListener
 			plugin.vanish(player);
 		}
                 
-                //Make it so random players can relog to see vanished ppl
-                plugin.updateInvisible(player);
+                //Make it so random players can't relog to see vanished ppl
+                plugin.scheduler.scheduleSyncDelayedTask(plugin, new PlayerInvisibleTimerTask(player));
 	}
 
 	public void onPlayerTeleport(PlayerTeleportEvent event)
@@ -132,26 +132,40 @@ public class VanishNoPickupPlayerListener extends PlayerListener
 	}
         
        private class TPInvisibleTimerTask implements Runnable
-{
-        protected Player m_player;
-        protected Location m_loc;
-
-        public TPInvisibleTimerTask(Player player, Location location)
         {
-            m_player = player;
-            m_loc = location;
-        }
+            protected Player m_player;
+            protected Location m_loc;
 
-
-        public void run()
-        {
-            World world = m_player.getWorld();
-            if(world.getPlayers().contains(m_player)){
-                m_player.teleport(m_loc);
-                plugin.updateInvisibleForPlayer(m_player);
+            public TPInvisibleTimerTask(Player player, Location location)
+            {
+                m_player = player;
+                m_loc = location;
             }
-        }
-        
-} 
+
+            public void run()
+            {
+                World world = m_player.getWorld();
+                if(world.getPlayers().contains(m_player)){
+                    m_player.teleport(m_loc);
+                    plugin.updateInvisibleForPlayer(m_player);
+                }
+            }
+
+        } 
+       private class PlayerInvisibleTimerTask implements Runnable
+        {
+            protected Player m_player;
+
+            public PlayerInvisibleTimerTask(Player player)
+            {
+                m_player = player;
+            }
+
+            public void run()
+            {
+                plugin.updateInvisible(m_player);                
+            }
+
+        } 
 	
 }
