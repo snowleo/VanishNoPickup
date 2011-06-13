@@ -27,6 +27,7 @@ import org.bukkit.util.config.Configuration;
 
 import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
+import java.lang.reflect.Array;
 
 
 /**
@@ -45,7 +46,7 @@ public class VanishNoPickup extends JavaPlugin
 	public int REFRESH_TIMER;
 
 	//private Timer timer = new Timer();
-
+        public ArrayList<VanishTeleportInfo> teleporting = new ArrayList<VanishTeleportInfo>();
 	public Set<String> invisible = new HashSet<String>();
 	public Set<String> nopickups = new HashSet<String>();
 
@@ -96,6 +97,8 @@ public class VanishNoPickup extends JavaPlugin
 		log.info("[" + getDescription().getName() + "] " + getDescription().getVersion() + " enabled.");
 
 		scheduler = getServer().getScheduler();
+                
+                //Scheduler is set to update all invisible player statuses every 20 seconds?!  That seems like a lot. 
 		scheduler.scheduleSyncRepeatingTask(this, new UpdateInvisibleTimerTask(),
 			10, 20 * REFRESH_TIMER);
 	}
@@ -224,13 +227,9 @@ public class VanishNoPickup extends JavaPlugin
 		}
 	}
 
-	private void invisible(Player p1, Player p2)
-	{
-		invisible(p1, p2, false);
-	}
 
 	/* Makes p1 invisible to p2 */
-	private void invisible(Player p1, Player p2, boolean force)
+	private void invisible(Player p1, Player p2)
 	{
                 if(p1 == null){
                     return;
@@ -241,7 +240,7 @@ public class VanishNoPickup extends JavaPlugin
 		if (p1.equals(p2))
 			return;
 
-		if ((!force) && (check(p2, "vanish.dont.hide")))
+		if ((check(p2, "vanish.dont.hide")))
 			return;
 
 		if (getDistanceSquared(p1, p2) > RANGE_SQUARED)
@@ -304,13 +303,9 @@ public class VanishNoPickup extends JavaPlugin
 		invisible.clear();
 	}
 
-	public void updateInvisibleForPlayer(Player player)
-	{
-		updateInvisibleForPlayer(player, false);
-	}
 
 	/* Makes it so no one can see a specific player */
-	public void updateInvisibleForPlayer(Player player, boolean force)
+	public void updateInvisibleForPlayer(Player player)
 	{
 		if (player == null || !player.isOnline())
 			return;
@@ -318,7 +313,7 @@ public class VanishNoPickup extends JavaPlugin
 		Player[] playerList = getServer().getOnlinePlayers();
 		for (Player p : playerList)
 		{
-			invisible(player, p, force);
+			invisible(player, p);
 		}
 	}
 
@@ -342,22 +337,38 @@ public class VanishNoPickup extends JavaPlugin
 		}
 	}
 
-	public double getDistanceSquared(Player player1, Player player2)
+	public long getDistanceSquared(Player player1, Player player2)
 	{
-		if (player1.getWorld() != player2.getWorld())
-			return Double.POSITIVE_INFINITY;
-
+		
 		Location loc1 = player1.getLocation();
 		Location loc2 = player2.getLocation();
-		return Math.pow(loc1.getX() - loc2.getX(), 2) + Math.pow(loc1.getZ() - loc2.getZ(), 2);
+		return getDistanceSquared(loc1, loc2);
+	}
+        public long getDistanceSquared(Location loc1, Location loc2)
+	{
+                if (loc1.getWorld() != loc2.getWorld())
+                    return Long.MAX_VALUE;
+                long xDiff = loc1.getBlockX() - loc2.getBlockX();
+                long zDiff = loc1.getBlockZ() - loc2.getBlockZ();
+		return xDiff * xDiff + zDiff * zDiff;
 	}
 
 	/* When you call something during a teleport event, the player
 	 * is still at the originating position.  This schedules an
 	 * update the next tick. */
+        /*
+         * The only problem with this method is that the player may not teleport on the next tick
+         * 
+         */
 	public void updateInvisibleForPlayerDelayed(Player player)
-	{
-		scheduler.scheduleSyncDelayedTask(this, new UpdateInvisibleTimerTask(player.getName()));
+	{  
+            //
+           //Set it up to wait 1/2 second before firing
+            scheduler.scheduleSyncDelayedTask(this, new UpdateInvisibleTimerTask(player.getName()), 10);
+            scheduler.scheduleSyncDelayedTask(this, new UpdateInvisibleTimerTask(player.getName()), 20);
+            scheduler.scheduleSyncDelayedTask(this, new UpdateInvisibleTimerTask(player.getName()), 40);
+            scheduler.scheduleSyncDelayedTask(this, new UpdateInvisibleTimerTask(player.getName()), 60);
+
 	}
 
 	protected class UpdateInvisibleTimerTask implements Runnable
