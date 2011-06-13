@@ -38,6 +38,9 @@ public class VanishNoPickupPlayerListener extends PlayerListener
 			player.sendMessage(ChatColor.RED + "You are currently invisible!");
 			plugin.vanish(player);
 		}
+                
+                //Make it so random players can relog to see vanished ppl
+                plugin.updateInvisible(player);
 	}
 
 	public void onPlayerTeleport(PlayerTeleportEvent event)
