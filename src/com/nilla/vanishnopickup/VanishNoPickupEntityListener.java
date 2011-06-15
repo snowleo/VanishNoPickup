@@ -1,22 +1,6 @@
 package com.nilla.vanishnopickup;
 
-import org.bukkit.entity.Chicken;
-import org.bukkit.entity.Cow;
-import org.bukkit.entity.Creeper;
-import org.bukkit.entity.Ghast;
-import org.bukkit.entity.Giant;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Monster;
-import org.bukkit.entity.Pig;
-import org.bukkit.entity.PigZombie;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Sheep;
-import org.bukkit.entity.Skeleton;
-import org.bukkit.entity.Slime;
-import org.bukkit.entity.Spider;
-import org.bukkit.entity.Squid;
-import org.bukkit.entity.Wolf;
-import org.bukkit.entity.Zombie;
 import org.bukkit.event.entity.EntityListener;
 import org.bukkit.event.entity.EntityTargetEvent;
 
@@ -60,17 +44,15 @@ public class VanishNoPickupEntityListener extends EntityListener
 			return;
 		
 		//Make sure it's a hostile mob
-		LivingEntity le = (LivingEntity) e.getEntity();
+		//LivingEntity le = (LivingEntity) e.getEntity();
 		
 		//Get the name
-		String name = checkMonsters(le);
+		/*String name = checkMonsters(le);
 		
 		//If it's not in our list, exit
 		if (name.isEmpty())
 			return;
-		
-		//only cancel if they're attacking for a good reason
-		//if (e.getReason() == TargetReason.) {
+		*/
 		
 		//We've passed all checks, cancel the event
 		e.setCancelled(true);
@@ -78,7 +60,7 @@ public class VanishNoPickupEntityListener extends EntityListener
 		//}
 		//return;
 	}
-
+/*
 	public String checkMonsters(LivingEntity le) {
 		String name = "";
 		if (le instanceof Chicken) {
@@ -113,5 +95,5 @@ public class VanishNoPickupEntityListener extends EntityListener
 			name = "zombie";
 		}
 		return name;
-	}
+	}*/
 }

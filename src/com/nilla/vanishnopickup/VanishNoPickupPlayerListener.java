@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
 
@@ -24,18 +25,31 @@ public class VanishNoPickupPlayerListener extends PlayerListener
 	{
 		plugin = instance;
 	}
-
-	@Override
+        
+        @Override
 	public void onPlayerJoin(PlayerJoinEvent event)
 	{
-		Player player = event.getPlayer();
-
+            vanishForJoinOrRespawn(event.getPlayer(), true);
+        }
+        
+        @Override
+	public void onPlayerRespawn(PlayerRespawnEvent event)
+	{
+            vanishForJoinOrRespawn(event.getPlayer(), false);
+        }
+                
+        private void vanishForJoinOrRespawn(Player player, boolean notify){
 		if(plugin.nopickups.contains(player.getName())){
+                    if(notify){
 			player.sendMessage(ChatColor.RED + "You have item pickups disabled!");
+                    }
 		}
 
 		if(plugin.invisible.contains(player.getName())){
-			player.sendMessage(ChatColor.RED + "You are currently invisible!");
+                        if(notify){
+                            player.sendMessage(ChatColor.RED + "You are currently invisible!");    
+                        }
+			
 			plugin.vanish(player);
 		}
                 
@@ -43,6 +57,7 @@ public class VanishNoPickupPlayerListener extends PlayerListener
                 plugin.scheduler.scheduleSyncDelayedTask(plugin, new PlayerInvisibleTimerTask(player));
 	}
 
+        @Override
 	public void onPlayerTeleport(PlayerTeleportEvent event)
 	{
 		if (event.isCancelled())
