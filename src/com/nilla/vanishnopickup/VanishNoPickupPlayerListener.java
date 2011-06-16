@@ -63,15 +63,16 @@ public class VanishNoPickupPlayerListener extends PlayerListener
 		if (event.isCancelled())
 			return;
                 
+                Location locFrom = event.getFrom();
+                Location locTo = event.getTo();
 
 		Player player = event.getPlayer();
                 //No more processing if the player isn't invisible
                 if (!plugin.invisible.contains(player.getName())){
+                  plugin.scheduler.scheduleSyncDelayedTask(plugin, new TPInvisibleTimerTask(player, locTo, false), 10);
                   return;
                 }
                 
-                Location locFrom = event.getFrom();
-                Location locTo = event.getTo();
                 
                 
                 long distance = plugin.getDistanceSquared(locFrom, locTo);
@@ -104,7 +105,7 @@ public class VanishNoPickupPlayerListener extends PlayerListener
                     //event.setCancelled(true);
                     
                     //Fire a scheduled task to TP the player to the original location
-                    plugin.scheduler.scheduleSyncDelayedTask(plugin, new TPInvisibleTimerTask(player, locTo), 15);
+                    plugin.scheduler.scheduleSyncDelayedTask(plugin, new TPInvisibleTimerTask(player, locTo, true), 15);
                     return;
                 }                        
                 else {
@@ -150,19 +151,26 @@ public class VanishNoPickupPlayerListener extends PlayerListener
         {
             protected Player m_player;
             protected Location m_loc;
+            protected boolean m_invis;
 
-            public TPInvisibleTimerTask(Player player, Location location)
+            public TPInvisibleTimerTask(Player player, Location location, boolean bInvisible)
             {
                 m_player = player;
                 m_loc = location;
+                m_invis = bInvisible;
             }
 
             public void run()
             {
+                if(m_invis){
                 World world = m_player.getWorld();
                 if(world.getPlayers().contains(m_player)){
                     m_player.teleport(m_loc);
                     plugin.updateInvisibleForPlayer(m_player);
+                }
+                }
+                else{
+                    plugin.updateInvisible(m_player);
                 }
             }
 
