@@ -9,6 +9,7 @@ import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.util.Vector;
 
 
 /**
@@ -78,7 +79,7 @@ public class VanishNoPickupPlayerListener extends PlayerListener
                 long distance = plugin.getDistanceSquared(locFrom, locTo);
                 boolean bDifferentWorld = false;
                 
-                if(event.getFrom().getWorld().getName() !=  locTo.getWorld().getName()){
+                if(locFrom.getWorld().getName() !=  locTo.getWorld().getName()){
                     bDifferentWorld = true;
                 }
                 
@@ -92,8 +93,10 @@ public class VanishNoPickupPlayerListener extends PlayerListener
                     }
                 }
                 
+                //Set distance > 80 means they probably don't have us loaded
+                //6400 = 80 * 80
                 //if we don't find their teleport info, we should add it
-                if ((tpi == null) && (bDifferentWorld || (distance >= plugin.RANGE_SQUARED / 2))){           
+                if ((tpi == null) && (bDifferentWorld || (distance >= 6400))){           
                     //plugin.log.info("Cancelling Teleport for player and moving to top:" + player.getName());
                     //Add them to our teleporting list 
                     plugin.teleporting.add(new VanishTeleportInfo(player.getName(), locTo));
@@ -104,14 +107,15 @@ public class VanishNoPickupPlayerListener extends PlayerListener
                     event.setTo(new_location);
                     //event.setCancelled(true);
                     
+                    //Make it so the player doesn't take damage for one second. 
+                    //This is in case they spawn within a block
+                    player.setNoDamageTicks(20); 
                     //Fire a scheduled task to TP the player to the original location
                     plugin.scheduler.scheduleSyncDelayedTask(plugin, new TPInvisibleTimerTask(player, locTo, true), 15);
                     return;
                 }                        
                 else {
-                    
-                   // plugin.log.info("Should be at final destination:" + player.getName());
-                    
+                    // plugin.log.info("Should be at final destination:" + player.getName());
                     //Remove the player from the TPing list and update their invisibile info
                     if(iLocation >= 0){
                         plugin.teleporting.remove(iLocation);
@@ -120,8 +124,6 @@ public class VanishNoPickupPlayerListener extends PlayerListener
                 
                 }
                     
-                
-                
                 
                 //We could cancel the event and TP the player to above the world where they're TPing
                 //Then WAIT 2 seconds and TP them to exactly where they wanted.
@@ -165,6 +167,8 @@ public class VanishNoPickupPlayerListener extends PlayerListener
                 if(m_invis){
                 World world = m_player.getWorld();
                 if(world.getPlayers().contains(m_player)){
+                    //reset the players fall distance
+                    m_player.setFallDistance(0);
                     m_player.teleport(m_loc);
                     plugin.updateInvisibleForPlayer(m_player);
                 }
