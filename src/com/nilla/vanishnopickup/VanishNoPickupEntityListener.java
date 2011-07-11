@@ -36,7 +36,7 @@ public class VanishNoPickupEntityListener extends EntityListener
 		Player player = (Player)e.getTarget();
 		
 		//Make sure this player is invisible
-		if (!plugin.invisible.contains(player.getName()))
+		if (!plugin.isPlayerInvisible(player.getName()))
 			return;
 
 		//Check the permissions

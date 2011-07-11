@@ -40,20 +40,31 @@ public class VanishNoPickup extends JavaPlugin
 {
 	public static PermissionHandler Permissions = null;
 	
-	public Configuration config;
-	public int RANGE;
-	public int RANGE_SQUARED;
-	public int REFRESH_TIMER;
+	protected Configuration config;
+	private int RANGE;
+	private int RANGE_SQUARED;
+	private int REFRESH_TIMER;
 
 	//private Timer timer = new Timer();
-        public ArrayList<VanishTeleportInfo> teleporting = new ArrayList<VanishTeleportInfo>();
-	public Set<String> invisible = new HashSet<String>();
-	public Set<String> nopickups = new HashSet<String>();
+        protected ArrayList<VanishTeleportInfo> teleporting = new ArrayList<VanishTeleportInfo>();
+	private Set<String> invisible = new HashSet<String>();
+	private Set<String> nopickups = new HashSet<String>();
 
 	private final VanishNoPickupEntityListener entityListener = new VanishNoPickupEntityListener(this);
 	private final VanishNoPickupPlayerListener playerListener = new VanishNoPickupPlayerListener(this);
 	protected static final Logger log = Logger.getLogger("Minecraft");
 	protected BukkitScheduler scheduler;
+        
+        public boolean isPlayerInvisible(String p_name){
+            return (invisible.contains(p_name));
+        }
+        public boolean isPlayerNP(String p_name){
+            return (nopickups.contains(p_name));
+        }
+        
+        public boolean hidesPlayerFromOnlineList(Player p){
+            return check(p, "vanish.hidefromwho");
+        }
 
         @Override
 	public void onDisable()
@@ -67,7 +78,6 @@ public class VanishNoPickup extends JavaPlugin
 	{
 		//Setup Permissions 
 		setupPermissions();
-		
 		
 		//Create new configuration file
 		config = new Configuration(new File(getDataFolder() ,  "config.yml"));
@@ -152,7 +162,11 @@ public class VanishNoPickup extends JavaPlugin
 		List<Player> players = new ArrayList<Player>();
 		for (String name : names) {
 			Player player = getServer().getPlayer(name);
-			players.add(player);
+                        //Don't add players that aren't online
+                        if(player != null){
+                            players.add(player);    
+                        }
+			
 		}
 		return players;
 	}
@@ -199,6 +213,7 @@ public class VanishNoPickup extends JavaPlugin
 		List<Player> invisiblePlayers = PlayersFromNames(invisible);
 		for (Player InvisiblePlayer : invisiblePlayers)
 		{
+                        if(InvisiblePlayer == null){continue;}
 			message += InvisiblePlayer.getDisplayName();
 			i++;
 			if (i != invisible.size())

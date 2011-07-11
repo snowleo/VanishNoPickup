@@ -1,5 +1,6 @@
 package com.nilla.vanishnopickup;
 
+import java.util.List;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -40,13 +41,13 @@ public class VanishNoPickupPlayerListener extends PlayerListener
         }
                 
         private void vanishForJoinOrRespawn(Player player, boolean notify){
-		if(plugin.nopickups.contains(player.getName())){
+		if(plugin.isPlayerNP(player.getName())){
                     if(notify){
 			player.sendMessage(ChatColor.RED + "You have item pickups disabled!");
                     }
 		}
 
-		if(plugin.invisible.contains(player.getName())){
+		if(plugin.isPlayerInvisible(player.getName())){
                         if(notify){
                             player.sendMessage(ChatColor.RED + "You are currently invisible!");    
                         }
@@ -69,14 +70,14 @@ public class VanishNoPickupPlayerListener extends PlayerListener
 
 		Player player = event.getPlayer();
                 //No more processing if the player isn't invisible
-                if (!plugin.invisible.contains(player.getName())){
+                if (!plugin.isPlayerInvisible(player.getName())){
                   plugin.scheduler.scheduleSyncDelayedTask(plugin, new TPInvisibleTimerTask(player, locTo, false), 10);
                   return;
                 }
                 
                 
                 
-                long distance = plugin.getDistanceSquared(locFrom, locTo);
+                long distance_squared = plugin.getDistanceSquared(locFrom, locTo);
                 boolean bDifferentWorld = false;
                 
                 if(locFrom.getWorld().getName() !=  locTo.getWorld().getName()){
@@ -93,10 +94,25 @@ public class VanishNoPickupPlayerListener extends PlayerListener
                     }
                 }
                 
-                //Set distance > 80 means they probably don't have us loaded
-                //6400 = 80 * 80
+                boolean bTeleportUp = false;
+                boolean bPlayerClose = false;
+                
+                List<Player> lPlayers = locTo.getWorld().getPlayers();
+                for (Player worldPlayer : lPlayers)
+		{
+                    if(plugin.getDistanceSquared(locTo, worldPlayer.getLocation()) < 25)
+                    {
+                        bPlayerClose = true;
+                        break;
+                    }
+                }
+                //Only teleport up if someone is really close to where we're landing and we're TPing pretty far(> 80)
+                //Set distance > 125 means they probably don't have us loaded
+                //6400 = 80^2
+                bTeleportUp = (bDifferentWorld || ((distance_squared >= 6400) && bPlayerClose));
+                
                 //if we don't find their teleport info, we should add it
-                if ((tpi == null) && (bDifferentWorld || (distance >= 6400))){           
+                if ((tpi == null) && bTeleportUp){           
                     //plugin.log.info("Cancelling Teleport for player and moving to top:" + player.getName());
                     //Add them to our teleporting list 
                     plugin.teleporting.add(new VanishTeleportInfo(player.getName(), locTo));
@@ -109,9 +125,10 @@ public class VanishNoPickupPlayerListener extends PlayerListener
                     
                     //Make it so the player doesn't take damage for one second. 
                     //This is in case they spawn within a block
-                    player.setNoDamageTicks(20); 
+                    player.setNoDamageTicks(40); 
                     //Fire a scheduled task to TP the player to the original location
-                    plugin.scheduler.scheduleSyncDelayedTask(plugin, new TPInvisibleTimerTask(player, locTo, true), 15);
+                    //Bumped this up to 1.5 seconds
+                    plugin.scheduler.scheduleSyncDelayedTask(plugin, new TPInvisibleTimerTask(player, locTo, true), 30);
                     return;
                 }                        
                 else {
@@ -143,7 +160,7 @@ public class VanishNoPickupPlayerListener extends PlayerListener
 		
 		Player player = event.getPlayer();
 	
-		if(plugin.nopickups.contains(player.getName())) {
+		if(plugin.isPlayerNP(player.getName())) {
 			event.setCancelled(true);
 		}
 		
