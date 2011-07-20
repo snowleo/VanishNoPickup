@@ -208,7 +208,7 @@ public class VanishNoPickup extends JavaPlugin
 	{
 		if ((command.getName().equalsIgnoreCase("vanish")) || (command.getName().equalsIgnoreCase("poof")))
 		{
-			if (sender instanceof ConsoleCommandSender || (args.length == 1) && (args[0].equalsIgnoreCase("list")))
+			if ((args.length == 1) && (args[0].equalsIgnoreCase("list")))
 			{
 				list(sender);
 				return true;
@@ -248,7 +248,7 @@ public class VanishNoPickup extends JavaPlugin
 				sender.sendMessage("Player removed from hidden list in config");
 				return true;
 			}
-			if ((args.length == 1) && (args[0].equalsIgnoreCase("aggro")) && check(sender, "vanish.noaggromobs"))
+			if (sender instanceof Player && (args.length == 1) && (args[0].equalsIgnoreCase("aggro")) && check(sender, "vanish.noaggromobs"))
 			{
 				toggleAggro((Player)sender);
 				return true;
