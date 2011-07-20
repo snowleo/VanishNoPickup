@@ -40,7 +40,7 @@ public class VanishNoPickupEntityListener extends EntityListener
 			return;
 
 		//Check the aggro setting
-		if (!plugin.isPlayerNA(player.getName()))
+		if (plugin.shouldMobsTargetPlayer(player.getName()))
 			return;
 		
 		//Make sure it's a hostile mob

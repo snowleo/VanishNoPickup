@@ -13,7 +13,8 @@ commands:
            /<command> list - List of invisible players
            /<command> reload - Reloads the config
            /<command> hide [player] - Hides a player from lists and joining/quit
-           /<command> unhide [player] - Disableds the hiding
+           /<command> unhide [player] - Disables the hiding
+           /<command> aggro - Toggles if mobs should aggro the player
   nopickup:
     description: Toggles Picking Up Items
     aliases: np
@@ -21,13 +22,6 @@ commands:
            Incorrect usage of /<command>. Examples:
            /<command> - Toggles Your Ability to Pickup Items
            /<command> list - List of players with Item Pickup Disabled
-  noaggro:
-    description: Toggles aggro of mobs
-    aliases: na
-    usage: |
-           Incorrect usage of /<command>. Examples:
-           /<command> - Toggles aggro of mobs
-           /<command> list - List of players with aggro of mobs Disabled
   fakequit:
     description: Fakes your leaving of the server
     aliases: fq

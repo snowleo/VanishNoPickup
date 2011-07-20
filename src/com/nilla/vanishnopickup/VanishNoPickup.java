@@ -50,7 +50,7 @@ public class VanishNoPickup extends JavaPlugin
         protected ArrayList<VanishTeleportInfo> teleporting = new ArrayList<VanishTeleportInfo>();
 	private Set<String> invisible = new HashSet<String>();
 	private Set<String> nopickups = new HashSet<String>();
-	private Set<String> noaggros = new HashSet<String>();
+	private Set<String> aggro = new HashSet<String>();
 	private Set<String> hidden = new HashSet<String>();
 
 	private final VanishNoPickupEntityListener entityListener = new VanishNoPickupEntityListener(this);
@@ -65,8 +65,8 @@ public class VanishNoPickup extends JavaPlugin
             return (nopickups.contains(p_name));
         }
 		
-		public boolean isPlayerNA(String p_name){
-            return (noaggros.contains(p_name));
+		public boolean shouldMobsTargetPlayer(String p_name){
+            return (aggro.contains(p_name));
         }
 		
 		public boolean isPlayerHidden(String p_name){
@@ -248,6 +248,11 @@ public class VanishNoPickup extends JavaPlugin
 				sender.sendMessage("Player removed from hidden list in config");
 				return true;
 			}
+			if ((args.length == 1) && (args[0].equalsIgnoreCase("aggro")) && check(sender, "vanish.noaggromobs"))
+			{
+				toggleAggro((Player)sender);
+				return true;
+			}
 			vanishCommand(sender);
 			return true;
 		}
@@ -260,19 +265,6 @@ public class VanishNoPickup extends JavaPlugin
 					return true;
 				}
 				toggleNoPickup((Player)sender);
-				return true;
-				
-			}
-		}
-		else if (command.getName().equalsIgnoreCase("na") || command.getName().equalsIgnoreCase("noaggro"))
-		{
-			if (check(sender, "vanish.noaggromobs")){
-				if (sender instanceof ConsoleCommandSender || (args.length == 1) && (args[0].equalsIgnoreCase("list")))
-				{
-					noaggro_list(sender);
-					return true;
-				}
-				toggleNoAggro((Player)sender);
 				return true;
 				
 			}
@@ -588,44 +580,21 @@ public class VanishNoPickup extends JavaPlugin
 		sender.sendMessage(ChatColor.RED + message + ChatColor.WHITE + " ");
 	}
 	
-	public void toggleNoAggro(Player player){
-		if (noaggros.contains(player.getName())) {
-			EnableAggro(player);
+	public void toggleAggro(Player player){
+		if (aggro.contains(player.getName())) {
+			DisableAggro(player);
 		} else {
-			DisableAggro(player);			
+			EnableAggro(player);			
 		}
 	}
 
 	public void DisableAggro(Player player){
 		player.sendMessage(ChatColor.RED + "Disabling aggro mobs");
-		noaggros.add(player.getName());
+		aggro.remove(player.getName());
 	}
 
 	public void EnableAggro(Player player){
 		player.sendMessage(ChatColor.RED + "Enabling aggro mobs");
-		noaggros.remove(player.getName());
-	}
-
-	private void noaggro_list(CommandSender sender)
-	{
-		if (!check(sender, "vanish.noaggro.list")) { return; }
-		if (noaggros.size() == 0)
-		{
-			sender.sendMessage(ChatColor.RED + "No players found");
-			return;
-		}
-		String message = "List of Players with Aggro Disabled: ";
-		int i = 0;
-		List<Player> noaggroPlayers = PlayersFromNames(noaggros);
-		for (Player thisPlayer : noaggroPlayers)
-		{
-			message += thisPlayer.getDisplayName();
-			i++;
-			if (i != noaggros.size())
-			{
-				message += " ";
-			}
-		}
-		sender.sendMessage(ChatColor.RED + message + ChatColor.WHITE + " ");
+		aggro.add(player.getName());
 	}
 }
