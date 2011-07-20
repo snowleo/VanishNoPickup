@@ -34,6 +34,9 @@ public class VanishNoPickupPlayerListener extends PlayerListener
 	{
             vanishForJoinOrRespawn(event.getPlayer(), true);
 		if (plugin.isPlayerHidden(event.getPlayer().getName())) {
+			if (!plugin.isPlayerInvisible(event.getPlayer().getName())) {
+				plugin.vanish(event.getPlayer());
+			}
 			event.setJoinMessage(null);
 			plugin.hideInEssentials(event.getPlayer(), true);
 		}
