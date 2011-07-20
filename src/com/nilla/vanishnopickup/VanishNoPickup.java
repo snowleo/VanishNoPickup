@@ -225,6 +225,10 @@ public class VanishNoPickup extends JavaPlugin
 				hidden.add(args[1]);
 				config.setProperty("hidden", hidden);
 				config.save();
+				Player player = getServer().getPlayer(args[1]);
+				if (player != null) {
+					hideInEssentials(player, true);
+				}
 				sender.sendMessage("Player added to hidden list in config");
 				return true;
 			}
@@ -237,6 +241,10 @@ public class VanishNoPickup extends JavaPlugin
 				}
 				config.setProperty("hidden", hidden);
 				config.save();
+				Player player = getServer().getPlayer(args[1]);
+				if (player != null) {
+					hideInEssentials(player, false);
+				}
 				sender.sendMessage("Player removed from hidden list in config");
 				return true;
 			}
