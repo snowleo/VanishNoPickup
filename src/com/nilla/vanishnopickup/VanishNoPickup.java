@@ -186,6 +186,11 @@ public class VanishNoPickup extends JavaPlugin
 				list(sender);
 				return true;
 			}
+			if (sender instanceof ConsoleCommandSender || (args.length == 1) && (args[0].equalsIgnoreCase("reload")))
+			{
+				config.load();
+				return true;
+			}
 			vanishCommand(sender);
 			return true;
 		}
