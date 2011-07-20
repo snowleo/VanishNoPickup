@@ -27,7 +27,7 @@ import org.bukkit.util.config.Configuration;
 
 import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
-import java.lang.reflect.Array;
+import com.earth2me.essentials.IEssentials;
 
 
 /**
@@ -39,6 +39,7 @@ import java.lang.reflect.Array;
 public class VanishNoPickup extends JavaPlugin
 {
 	public static PermissionHandler Permissions = null;
+	private IEssentials Essentials = null;
 	
 	protected Configuration config;
 	private int RANGE;
@@ -50,6 +51,7 @@ public class VanishNoPickup extends JavaPlugin
 	private Set<String> invisible = new HashSet<String>();
 	private Set<String> nopickups = new HashSet<String>();
 	private Set<String> noaggros = new HashSet<String>();
+	private Set<String> hidden = new HashSet<String>();
 
 	private final VanishNoPickupEntityListener entityListener = new VanishNoPickupEntityListener(this);
 	private final VanishNoPickupPlayerListener playerListener = new VanishNoPickupPlayerListener(this);
@@ -64,6 +66,10 @@ public class VanishNoPickup extends JavaPlugin
         }
 		
 		public boolean isPlayerNA(String p_name){
+            return (noaggros.contains(p_name));
+        }
+		
+		public boolean isPlayerHidden(String p_name){
             return (noaggros.contains(p_name));
         }
         
@@ -84,27 +90,17 @@ public class VanishNoPickup extends JavaPlugin
 		//Setup Permissions 
 		setupPermissions();
 		
+		//Setup Essentials
+		setupEssentials();
+		
 		//Create new configuration file
 		config = new Configuration(new File(getDataFolder() ,  "config.yml"));
 		
-		//Load the config if it's there
-		try{
-			config.load();
-		}
-		catch(Exception ex){
-			//Ignore the errors
-		}
+		reload();
 		
-		//Load our variables from configuration
-		RANGE = config.getInt("range", 512);
-		RANGE_SQUARED = RANGE*RANGE;
-		REFRESH_TIMER = config.getInt("refresh_delay", 20);
-		
-		//Save the configuration(especially if it wasn't before)
-		config.save();
-
 		PluginManager pm = getServer().getPluginManager();
-		pm.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Priority.Normal, this);
+		pm.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Priority.High, this);
+		pm.registerEvent(Event.Type.PLAYER_QUIT, playerListener, Priority.High, this);
 		pm.registerEvent(Event.Type.PLAYER_TELEPORT, playerListener, Priority.High, this);
 		pm.registerEvent(Event.Type.PLAYER_RESPAWN, playerListener, Priority.Normal, this);
                 pm.registerEvent(Event.Type.PLAYER_PICKUP_ITEM, playerListener, Priority.Normal, this);
@@ -117,6 +113,26 @@ public class VanishNoPickup extends JavaPlugin
                 //Scheduler is set to update all invisible player statuses every 20 seconds?!  That seems like a lot. 
 		scheduler.scheduleSyncRepeatingTask(this, new UpdateInvisibleTimerTask(),
 			10, 20 * REFRESH_TIMER);
+	}
+		
+	public void reload()
+	{
+		//Load the config if it's there
+		try{
+			config.load();
+		}
+		catch(Exception ex){
+			//Ignore the errors
+		}
+		
+		//Load our variables from configuration
+		RANGE = config.getInt("range", 512);
+		RANGE_SQUARED = RANGE*RANGE;
+		REFRESH_TIMER = config.getInt("refresh_delay", 20);
+		hidden.addAll(config.getStringList("hidden", new ArrayList<String>())); 
+		
+		//Save the configuration(especially if it wasn't before)
+		config.save();
 	}
 
 	public void setupPermissions()
@@ -134,6 +150,17 @@ public class VanishNoPickup extends JavaPlugin
 			{
 				log.info("[" + getDescription().getName() + "] Permissions not detected.");
 			}
+		}
+	}
+	
+	public void setupEssentials()
+	{
+		Plugin test = this.getServer().getPluginManager().getPlugin("Essentials");
+
+		if (test != null)
+		{
+			this.Essentials = ((IEssentials) test);
+			log.info("[" + getDescription().getName() + "] Essentials detected and hooked.");
 		}
 	}
 
@@ -186,9 +213,31 @@ public class VanishNoPickup extends JavaPlugin
 				list(sender);
 				return true;
 			}
-			if (sender instanceof ConsoleCommandSender || (args.length == 1) && (args[0].equalsIgnoreCase("reload")))
+			if ((args.length == 1) && (args[0].equalsIgnoreCase("reload")) && check(sender, "vanish.reload"))
 			{
-				config.load();
+				reload();
+				sender.sendMessage("Config reloaded");
+				return true;
+			}
+			if ((args.length == 2) && (args[0].equalsIgnoreCase("hide")) && check(sender, "vanish.hide"))
+			{
+				reload();
+				hidden.add(args[1]);
+				config.setProperty("hidden", hidden);
+				config.save();
+				sender.sendMessage("Player added to hidden list in config");
+				return true;
+			}
+			if ((args.length == 2) && (args[0].equalsIgnoreCase("unhide")) && check(sender, "vanish.hide"))
+			{
+				reload();
+				if (!hidden.remove(args[1])) {
+					sender.sendMessage("Player not on hidden list");
+					return true;
+				}
+				config.setProperty("hidden", hidden);
+				config.save();
+				sender.sendMessage("Player removed from hidden list in config");
 				return true;
 			}
 			vanishCommand(sender);
@@ -218,6 +267,48 @@ public class VanishNoPickup extends JavaPlugin
 				toggleNoAggro((Player)sender);
 				return true;
 				
+			}
+		}
+		else if (command.getName().equalsIgnoreCase("fq") || command.getName().equalsIgnoreCase("fakequit"))
+		{
+			if (sender instanceof Player && check(sender, "vanish.fakequit")) {
+				Player player = (Player) sender;
+				reload();
+				hidden.add(player.getName());
+				config.setProperty("hidden", hidden);
+				config.save();
+				if (!invisible.contains(player.getName())) {
+					DisablePickups(player);
+					if (check(sender, "vanish.noaggromobs")){
+						DisableAggro(player);
+					}
+					vanish(player);
+				}
+				hideInEssentials(player, true);
+				getServer().broadcastMessage("\u00A7e" + player.getName() + " left the game.");
+				sender.sendMessage("You left the game, type /fakejoin to join again.");
+				return true;
+			}
+		}
+		else if (command.getName().equalsIgnoreCase("fj") || command.getName().equalsIgnoreCase("fakejoin"))
+		{
+			if (sender instanceof Player && check(sender, "vanish.fakequit")) {
+				Player player = (Player) sender;
+				getServer().broadcastMessage("\u00A7e" + player.getName() + " joined the game.");
+				reload();
+				hidden.remove(player.getName());
+				config.setProperty("hidden", hidden);
+				config.save();
+				if (invisible.contains(player.getName())) {
+					EnablePickups(player);
+					if (check(sender, "vanish.noaggromobs")){
+						EnableAggro(player);
+					}
+					reappear(player);
+				}
+				hideInEssentials(player, false);
+				sender.sendMessage("You joined the game.");
+				return true;
 			}
 		}
 		return false;
@@ -414,6 +505,13 @@ public class VanishNoPickup extends JavaPlugin
             scheduler.scheduleSyncDelayedTask(this, new UpdateInvisibleTimerTask(player.getName()), 40);
             scheduler.scheduleSyncDelayedTask(this, new UpdateInvisibleTimerTask(player.getName()), 60);
 
+	}
+
+	void hideInEssentials(Player p, boolean b)
+	{
+		if (Essentials != null) {
+			Essentials.getUser(p).setHidden(b);
+		}
 	}
 
 	protected class UpdateInvisibleTimerTask implements Runnable

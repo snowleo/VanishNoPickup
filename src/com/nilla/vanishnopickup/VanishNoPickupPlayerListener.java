@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.util.Vector;
@@ -32,7 +33,22 @@ public class VanishNoPickupPlayerListener extends PlayerListener
 	public void onPlayerJoin(PlayerJoinEvent event)
 	{
             vanishForJoinOrRespawn(event.getPlayer(), true);
+		if (plugin.isPlayerHidden(event.getPlayer().getName())) {
+			event.setJoinMessage(null);
+			plugin.hideInEssentials(event.getPlayer(), true);
+		}
         }
+
+	@Override
+	public void onPlayerQuit(PlayerQuitEvent event)
+	{
+		if (plugin.isPlayerHidden(event.getPlayer().getName())) {
+			event.setQuitMessage(null);
+			plugin.hideInEssentials(event.getPlayer(), false);
+		}
+	}
+	
+	
         
         @Override
 	public void onPlayerRespawn(PlayerRespawnEvent event)

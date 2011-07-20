@@ -1,7 +1,8 @@
 name: VanishNoPickup
 main: com.nilla.vanishnopickup.VanishNoPickup
-version: 1.9.12
+version: 1.9.12+essentials1
 author: EvilNilla
+softdepend: [Permissions,Essentials]
 commands:
   vanish:
     description: Toggles your visibility
@@ -10,6 +11,9 @@ commands:
            Incorrect usage of /<command>. Examples:
            /<command> - Toggles your visibility
            /<command> list - List of invisible players
+           /<command> reload - Reloads the config
+           /<command> hide [player] - Hides a player from lists and joining/quit
+           /<command> unhide [player] - Disableds the hiding
   nopickup:
     description: Toggles Picking Up Items
     aliases: np
@@ -17,3 +21,22 @@ commands:
            Incorrect usage of /<command>. Examples:
            /<command> - Toggles Your Ability to Pickup Items
            /<command> list - List of players with Item Pickup Disabled
+  noaggro:
+    description: Toggles aggro of mobs
+    aliases: na
+    usage: |
+           Incorrect usage of /<command>. Examples:
+           /<command> - Toggles aggro of mobs
+           /<command> list - List of players with aggro of mobs Disabled
+  fakequit:
+    description: Fakes your leaving of the server
+    aliases: fq
+    usage: |
+           Incorrect usage of /<command>. Examples:
+           /<command> - Fakes your leaving of the server
+  fakejoin:
+    description: Fakes your joining of the server
+    aliases: fj
+    usage: |
+           Incorrect usage of /<command>. Examples:
+           /<command> - Fakes your joining of the server
