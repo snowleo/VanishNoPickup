@@ -70,7 +70,7 @@ public class VanishNoPickup extends JavaPlugin
         }
 		
 		public boolean isPlayerHidden(String p_name){
-            return (noaggros.contains(p_name));
+            return (hidden.contains(p_name));
         }
         
         public boolean hidesPlayerFromOnlineList(Player p){
