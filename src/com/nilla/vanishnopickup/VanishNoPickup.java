@@ -181,7 +181,7 @@ public class VanishNoPickup extends JavaPlugin
 	{
 		if ((command.getName().equalsIgnoreCase("vanish")) || (command.getName().equalsIgnoreCase("poof")))
 		{
-			if ((args.length == 1) && (args[0].equalsIgnoreCase("list")))
+			if (sender instanceof ConsoleCommandSender || (args.length == 1) && (args[0].equalsIgnoreCase("list")))
 			{
 				list(sender);
 				return true;
@@ -192,7 +192,7 @@ public class VanishNoPickup extends JavaPlugin
 		else if (command.getName().equalsIgnoreCase("np") || command.getName().equalsIgnoreCase("nopickup"))
 		{
 			if (check(sender, "vanish.nopickup")){
-				if ((args.length == 1) && (args[0].equalsIgnoreCase("list")))
+				if (sender instanceof ConsoleCommandSender || (args.length == 1) && (args[0].equalsIgnoreCase("list")))
 				{
 					nopickup_list(sender);
 					return true;
