@@ -5,3 +5,7 @@ bin/
 /.settings
 /target
 VanishNoPickup.jar
+/nbproject/private/
+/build/
+/dist/
+.DS_Store
