@@ -223,7 +223,7 @@ public class VanishNoPickup extends JavaPlugin
 			{
 				reload();
 				hidden.add(args[1]);
-				config.setProperty("hidden", hidden);
+				config.setProperty("hidden", hidden.toArray(new String[0]));
 				config.save();
 				Player player = getServer().getPlayer(args[1]);
 				if (player != null) {
@@ -239,7 +239,7 @@ public class VanishNoPickup extends JavaPlugin
 					sender.sendMessage("Player not on hidden list");
 					return true;
 				}
-				config.setProperty("hidden", hidden);
+				config.setProperty("hidden", hidden.toArray(new String[0]));
 				config.save();
 				Player player = getServer().getPlayer(args[1]);
 				if (player != null) {
@@ -275,7 +275,7 @@ public class VanishNoPickup extends JavaPlugin
 				Player player = (Player) sender;
 				reload();
 				hidden.add(player.getName());
-				config.setProperty("hidden", hidden);
+				config.setProperty("hidden", hidden.toArray(new String[0]));
 				config.save();
 				if (!invisible.contains(player.getName())) {
 					DisablePickups(player);
@@ -297,7 +297,7 @@ public class VanishNoPickup extends JavaPlugin
 				getServer().broadcastMessage("\u00A7e" + player.getName() + " joined the game.");
 				reload();
 				hidden.remove(player.getName());
-				config.setProperty("hidden", hidden);
+				config.setProperty("hidden", hidden.toArray(new String[0]));
 				config.save();
 				if (invisible.contains(player.getName())) {
 					EnablePickups(player);
